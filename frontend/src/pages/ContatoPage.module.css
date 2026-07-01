@@ -2,6 +2,20 @@
   padding-block: var(--space-8);
 }
 
+.banner {
+  margin-bottom: var(--space-6);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+.banner img {
+  width: 100%;
+  height: clamp(200px, 34vw, 360px);
+  object-fit: cover;
+  object-position: center 42%;
+  display: block;
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1.2fr;

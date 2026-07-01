@@ -26,6 +26,13 @@ export default function ContatoPage() {
       />
 
       <section className={`container ${styles.section}`}>
+        <div className={styles.banner}>
+          <img
+            src="/img/capela-comunidade.jpg"
+            alt="Fachada da Capela Nossa Senhora de Fátima"
+            loading="lazy"
+          />
+        </div>
         <div className={styles.grid}>
           <div className={styles.info}>
             <a href={CAPELA.telefoneLink} className={styles.card}>

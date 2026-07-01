@@ -80,6 +80,48 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ===================== BEM-VINDO ===================== */}
+      <section className={`container ${styles.welcome}`}>
+        <motion.div
+          className={styles.welcomeText}
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-80px' }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="eyebrow">Nossa comunidade</p>
+          <h2 className={styles.welcomeTitle}>Uma casa de fé e acolhimento</h2>
+          <p>
+            A Capela Nossa Senhora de Fátima é um lugar de encontro, oração e comunhão no
+            Jardim Nova Esperança. Fazemos parte da {CAPELA.paroquia} e caminhamos unidos na
+            fé, no serviço e na alegria de servir.
+          </p>
+          <p>
+            Aqui, cada pessoa é bem-vinda — para a Santa Missa, para integrar uma pastoral ou
+            simplesmente rezar em silêncio. As portas estão sempre abertas para você e sua
+            família.
+          </p>
+          <div className={styles.welcomeActions}>
+            <Button to="/pastorais" variant="ghost">
+              Conheça as pastorais <Icon name="arrowRight" size={18} />
+            </Button>
+          </div>
+        </motion.div>
+        <motion.div
+          className={styles.welcomeImage}
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <img
+            src="/img/capela-comunidade.jpg"
+            alt="Comunidade na Capela Nossa Senhora de Fátima"
+            loading="lazy"
+          />
+        </motion.div>
+      </section>
+
       {/* ===================== PROGRAMAÇÃO ===================== */}
       <section id="programacao" className={`container ${styles.section}`}>
         <SectionHeader
