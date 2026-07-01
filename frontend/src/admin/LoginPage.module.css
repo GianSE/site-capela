@@ -4,7 +4,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
+  padding: var(--space-3);
   background: var(--gradient-blue);
   overflow-y: auto;
 }
@@ -20,19 +20,20 @@
   background: var(--ivory);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-lg);
+  /* Encolhe verticalmente sozinho quando falta espaço (teclado, telas baixas)
+     em vez de forçar rolagem da página. */
+  margin-block: auto;
 }
 .card h1 {
   font-size: var(--fs-2xl);
   text-align: center;
 }
 
-@media (max-width: 420px) {
-  .card {
-    padding: var(--space-5) var(--space-4);
-    gap: var(--space-2);
-    border-radius: var(--radius-lg);
-  }
+.logo {
+  width: 64px;
+  height: 64px;
 }
+
 .sub {
   font-size: var(--fs-sm);
   color: var(--text-faint);
@@ -94,4 +95,52 @@
   background: #fef2f2;
   border: 1px solid #fecaca;
   border-radius: var(--radius-md);
+}
+
+/* Telas estreitas: reduz padding do card. */
+@media (max-width: 420px) {
+  .card {
+    padding: var(--space-5) var(--space-4);
+    gap: var(--space-2);
+    border-radius: var(--radius-lg);
+  }
+}
+
+/* Telas baixas (celular com teclado aberto, ou navegador com muita barra de
+   chrome): compacta tudo para caber sem rolagem. Baseado em altura, não largura. */
+@media (max-height: 700px) {
+  .wrap {
+    align-items: flex-start;
+  }
+  .card {
+    margin-top: var(--space-3);
+    padding: var(--space-4);
+    gap: var(--space-2);
+  }
+  .logo {
+    width: 40px;
+    height: 40px;
+  }
+  .card h1 {
+    font-size: var(--fs-lg);
+  }
+  .sub {
+    margin-bottom: var(--space-1);
+  }
+  .field input {
+    padding: var(--space-2) var(--space-3);
+  }
+  .submit {
+    margin-top: var(--space-1);
+    padding: var(--space-3);
+  }
+}
+
+@media (max-height: 500px) {
+  .logo {
+    display: none;
+  }
+  .card h1 {
+    font-size: var(--fs-base);
+  }
 }
