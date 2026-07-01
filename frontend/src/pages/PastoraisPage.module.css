@@ -49,6 +49,13 @@
   height: 100%;
   transition: transform var(--dur-slow) var(--ease-out);
 }
+.noPhoto {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--gold-400);
+}
 .cover[data-fit='cover'] img {
   object-fit: contain; /* imagem inteira, sem cortar */
 }

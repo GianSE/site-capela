@@ -104,4 +104,32 @@ publicRoutes.get('/albums/:slug', async (c) => {
   return c.json({ ...album, photos });
 });
 
+// ---------- Pastorais ----------
+publicRoutes.get('/pastorais', async (c) => {
+  const { results: pastorais } = await c.env.DB.prepare(
+    `SELECT id, slug, nome, lema, descricao, icon, fit, sort_order, published
+       FROM pastorais WHERE published = 1 ORDER BY sort_order, id`
+  ).all<{ id: number }>();
+
+  if (pastorais.length === 0) return c.json([]);
+
+  const ids = pastorais.map((p) => p.id);
+  const placeholders = ids.map(() => '?').join(',');
+  const { results: photos } = await c.env.DB.prepare(
+    `SELECT id, pastoral_id, image_id, sort_order
+       FROM pastoral_photos WHERE pastoral_id IN (${placeholders}) ORDER BY sort_order, id`
+  )
+    .bind(...ids)
+    .all<{ pastoral_id: number }>();
+
+  const byPastoral = new Map<number, unknown[]>();
+  for (const photo of photos) {
+    const list = byPastoral.get(photo.pastoral_id) ?? [];
+    list.push(photo);
+    byPastoral.set(photo.pastoral_id, list);
+  }
+
+  return c.json(pastorais.map((p) => ({ ...p, photos: byPastoral.get(p.id) ?? [] })));
+});
+
 // As imagens são servidas diretamente pela CDN do Cloudinary (ver frontend imgUrl).

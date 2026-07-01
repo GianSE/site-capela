@@ -1,9 +1,8 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { CAPELA } from '../data/site';
-import { PASTORAIS } from '../data/pastorais';
 import { HORARIOS_PADRAO } from '../data/horarios';
-import type { ScheduleItem, Post, Album } from '../types';
+import type { ScheduleItem, Post, Album, Pastoral } from '../types';
 import { useFetch } from '../hooks/useFetch';
 import { useSeo } from '../hooks/useSeo';
 import { Button } from '../components/Button/Button';
@@ -27,6 +26,7 @@ export default function HomePage() {
   const { data: schedule } = useFetch<ScheduleItem[]>('/schedule', HORARIOS_PADRAO);
   const { data: eventos } = useFetch<Post[]>('/posts?type=evento&limit=3', []);
   const { data: albuns } = useFetch<Album[]>('/albums?limit=3', []);
+  const { data: pastorais } = useFetch<Pastoral[]>('/pastorais', []);
 
   const horarios = schedule && schedule.length ? schedule : HORARIOS_PADRAO;
   const proximosEventos = (eventos ?? []).filter((e) => e.published);
@@ -166,13 +166,13 @@ export default function HomePage() {
             center
           />
           <div className={styles.pastoraisGrid}>
-            {PASTORAIS.slice(0, 6).map((p) => (
+            {(pastorais ?? []).slice(0, 6).map((p) => (
               <Link key={p.slug} to="/pastorais" className={styles.pastoralCard}>
                 <div className={styles.pastoralIcon}>
                   <Icon name={p.icon as never} size={24} />
                 </div>
                 <h3>{p.nome}</h3>
-                <p>{p.lema}</p>
+                {p.lema && <p>{p.lema}</p>}
               </Link>
             ))}
           </div>

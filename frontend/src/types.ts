@@ -61,3 +61,24 @@ export interface AdminUser {
   name: string;
   created_at?: string;
 }
+
+export interface PastoralPhoto {
+  id: number;
+  pastoral_id: number;
+  image_id: string; // public_id no Cloudinary
+  sort_order: number;
+}
+
+export interface Pastoral {
+  id: number;
+  slug: string;
+  nome: string;
+  lema: string | null;
+  descricao: string | null;
+  icon: string;
+  fit: 'cover' | 'contain';
+  sort_order: number;
+  published: number;
+  photo_count?: number; // resolvido pela API (admin)
+  photos: PastoralPhoto[];
+}

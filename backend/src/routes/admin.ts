@@ -318,6 +318,175 @@ adminRoutes.put('/albums/:id/photos/order', async (c) => {
 });
 
 // ============================================================
+// PASTORAIS
+// ============================================================
+adminRoutes.get('/pastorais', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT p.*, (SELECT COUNT(*) FROM pastoral_photos pp WHERE pp.pastoral_id = p.id) AS photo_count
+       FROM pastorais p
+      ORDER BY p.sort_order, p.id`
+  ).all();
+  return c.json(results);
+});
+
+adminRoutes.get('/pastorais/:id', async (c) => {
+  const id = c.req.param('id');
+  const pastoral = await c.env.DB.prepare(`SELECT * FROM pastorais WHERE id = ?`).bind(id).first();
+  if (!pastoral) return c.json({ error: 'Não encontrada' }, 404);
+  const { results: photos } = await c.env.DB.prepare(
+    `SELECT * FROM pastoral_photos WHERE pastoral_id = ? ORDER BY sort_order, id`
+  )
+    .bind(id)
+    .all();
+  return c.json({ ...pastoral, photos });
+});
+
+interface PastoralInput {
+  nome?: string;
+  lema?: string;
+  descricao?: string;
+  icon?: string;
+  fit?: string;
+  sort_order?: number;
+  published?: boolean;
+}
+
+const FITS = ['cover', 'contain'];
+const normFit = (f?: string) => (f && FITS.includes(f) ? f : 'cover');
+
+adminRoutes.post('/pastorais', async (c) => {
+  const b = await c.req.json<PastoralInput>().catch(() => ({}) as PastoralInput);
+  if (!b.nome) return c.json({ error: 'Nome é obrigatório' }, 400);
+  const slug = await uniqueSlug(b.nome, async (s) => {
+    const r = await c.env.DB.prepare(`SELECT 1 FROM pastorais WHERE slug = ?`).bind(s).first();
+    return !!r;
+  });
+
+  // Próxima posição de ordenação (novas pastorais vão para o fim da lista).
+  const last = await c.env.DB.prepare(
+    `SELECT COALESCE(MAX(sort_order), 0) AS max FROM pastorais`
+  ).first<{ max: number }>();
+
+  const res = await c.env.DB.prepare(
+    `INSERT INTO pastorais (slug, nome, lema, descricao, icon, fit, sort_order, published)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  )
+    .bind(
+      slug,
+      b.nome,
+      b.lema ?? null,
+      b.descricao ?? null,
+      b.icon || 'heart',
+      normFit(b.fit),
+      (last?.max ?? 0) + 1,
+      b.published === false ? 0 : 1
+    )
+    .run();
+
+  return c.json({ id: res.meta.last_row_id, slug }, 201);
+});
+
+adminRoutes.put('/pastorais/:id', async (c) => {
+  const id = c.req.param('id');
+  const b = await c.req.json<PastoralInput>().catch(() => ({}) as PastoralInput);
+  const existing = await c.env.DB.prepare(`SELECT id FROM pastorais WHERE id = ?`)
+    .bind(id)
+    .first();
+  if (!existing) return c.json({ error: 'Não encontrada' }, 404);
+
+  await c.env.DB.prepare(
+    `UPDATE pastorais SET
+       nome = COALESCE(?, nome),
+       lema = ?,
+       descricao = ?,
+       icon = COALESCE(?, icon),
+       fit = COALESCE(?, fit),
+       sort_order = COALESCE(?, sort_order),
+       published = COALESCE(?, published)
+     WHERE id = ?`
+  )
+    .bind(
+      b.nome ?? null,
+      b.lema ?? null,
+      b.descricao ?? null,
+      b.icon || null,
+      b.fit ? normFit(b.fit) : null,
+      b.sort_order ?? null,
+      b.published === undefined ? null : b.published ? 1 : 0,
+      id
+    )
+    .run();
+
+  return c.json({ ok: true });
+});
+
+adminRoutes.delete('/pastorais/:id', async (c) => {
+  const id = c.req.param('id');
+  // Remove as imagens do Cloudinary antes de apagar as linhas.
+  const { results } = await c.env.DB.prepare(
+    `SELECT image_id FROM pastoral_photos WHERE pastoral_id = ?`
+  )
+    .bind(id)
+    .all<{ image_id: string }>();
+  await Promise.all(results.map((p) => deleteImage(c.env, p.image_id)));
+  await c.env.DB.prepare(`DELETE FROM pastorais WHERE id = ?`).bind(id).run();
+  return c.body(null, 204);
+});
+
+// ---------- Fotos da pastoral (upload multipart, exclusão, ordem) ----------
+adminRoutes.post('/pastorais/:id/photos', async (c) => {
+  const pastoralId = c.req.param('id');
+  const pastoral = await c.env.DB.prepare(`SELECT id FROM pastorais WHERE id = ?`)
+    .bind(pastoralId)
+    .first();
+  if (!pastoral) return c.json({ error: 'Pastoral não encontrada' }, 404);
+
+  const form = await c.req.formData();
+  const raw = form.getAll('files') as unknown as Array<File | string>;
+  const files = raw.filter((f): f is File => typeof f !== 'string');
+  if (files.length === 0) return c.json({ error: 'Nenhum arquivo enviado' }, 400);
+
+  const last = await c.env.DB.prepare(
+    `SELECT COALESCE(MAX(sort_order), 0) AS max FROM pastoral_photos WHERE pastoral_id = ?`
+  )
+    .bind(pastoralId)
+    .first<{ max: number }>();
+  let order = (last?.max ?? 0) + 1;
+
+  const created: unknown[] = [];
+  for (const file of files) {
+    const { publicId } = await uploadImage(c.env, file, `capela/pastorais/${pastoralId}`);
+    const res = await c.env.DB.prepare(
+      `INSERT INTO pastoral_photos (pastoral_id, image_id, sort_order) VALUES (?, ?, ?)`
+    )
+      .bind(pastoralId, publicId, order++)
+      .run();
+    created.push({ id: res.meta.last_row_id, image_id: publicId });
+  }
+
+  return c.json({ uploaded: created.length, photos: created }, 201);
+});
+
+adminRoutes.delete('/pastoral-photos/:id', async (c) => {
+  const id = c.req.param('id');
+  const photo = await c.env.DB.prepare(`SELECT image_id FROM pastoral_photos WHERE id = ?`)
+    .bind(id)
+    .first<{ image_id: string }>();
+  if (photo) await deleteImage(c.env, photo.image_id);
+  await c.env.DB.prepare(`DELETE FROM pastoral_photos WHERE id = ?`).bind(id).run();
+  return c.body(null, 204);
+});
+
+// Reordenar fotos: recebe { order: number[] } com IDs na nova sequência.
+adminRoutes.put('/pastorais/:id/photos/order', async (c) => {
+  const b = await c.req.json<{ order?: number[] }>().catch(() => ({}) as { order?: number[] });
+  if (!Array.isArray(b.order)) return c.json({ error: 'order inválido' }, 400);
+  const stmt = c.env.DB.prepare(`UPDATE pastoral_photos SET sort_order = ? WHERE id = ?`);
+  await c.env.DB.batch(b.order.map((photoId, i) => stmt.bind(i + 1, photoId)));
+  return c.json({ ok: true });
+});
+
+// ============================================================
 // SCHEDULE (programação)
 // ============================================================
 adminRoutes.get('/schedule', async (c) => {

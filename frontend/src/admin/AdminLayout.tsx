@@ -10,6 +10,7 @@ const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: '/admin/eventos', label: 'Eventos', icon: 'calendar' },
   { to: '/admin/avisos', label: 'Avisos', icon: 'broadcast' },
   { to: '/admin/galeria', label: 'Galeria', icon: 'image' },
+  { to: '/admin/pastorais', label: 'Pastorais', icon: 'heart' },
   { to: '/admin/programacao', label: 'Programação', icon: 'clock' },
   { to: '/admin/configuracoes', label: 'Configurações', icon: 'mapPin' },
   { to: '/admin/usuarios', label: 'Usuários', icon: 'users' },

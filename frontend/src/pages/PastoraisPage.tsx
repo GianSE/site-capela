@@ -1,12 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PASTORAIS } from '../data/pastorais';
-import type { Pastoral } from '../data/pastorais';
+import { useFetch } from '../hooks/useFetch';
 import { useSeo } from '../hooks/useSeo';
 import { PageHero } from '../components/PageHero/PageHero';
+import { Loader } from '../components/Loader/Loader';
+import { EmptyState } from '../components/EmptyState/EmptyState';
 import { Icon } from '../components/Icon/Icon';
 import type { IconName } from '../components/Icon/Icon';
 import { CAPELA } from '../data/site';
+import { imgUrl } from '../lib/api';
+import type { Pastoral } from '../types';
 import styles from './PastoraisPage.module.css';
 
 export default function PastoraisPage() {
@@ -15,6 +18,9 @@ export default function PastoraisPage() {
     description:
       'Conheça as pastorais da Capela Nossa Senhora de Fátima e as equipes que dão vida à nossa comunidade: Catequese, Liturgia, Legião de Maria, Música, Social e muito mais.',
   });
+
+  const { data, loading } = useFetch<Pastoral[]>('/pastorais', []);
+  const pastorais = data ?? [];
 
   // Lightbox: fotos da pastoral aberta + índice atual
   const [lb, setLb] = useState<{ photos: string[]; i: number; nome: string } | null>(null);
@@ -45,7 +51,7 @@ export default function PastoraisPage() {
   }, [lb, close, prev, next]);
 
   function open(p: Pastoral) {
-    setLb({ photos: p.photos, i: 0, nome: p.nome });
+    setLb({ photos: p.photos.map((ph) => imgUrl(ph.image_id)), i: 0, nome: p.nome });
   }
 
   return (
@@ -57,41 +63,60 @@ export default function PastoraisPage() {
       />
 
       <section className={`container ${styles.section}`}>
-        <div className={styles.grid}>
-          {PASTORAIS.map((p, i) => (
-            <motion.article
-              key={p.slug}
-              className={styles.card}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: '-60px' }}
-              transition={{ duration: 0.5, delay: (i % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <button
-                className={styles.cover}
-                data-fit={p.fit ?? 'cover'}
-                style={{ ['--cover' as string]: `url("${p.photos[0]}")` } as React.CSSProperties}
-                onClick={() => open(p)}
-                aria-label={`Ver fotos da pastoral ${p.nome}`}
-              >
-                <img src={p.photos[0]} alt={`Pastoral ${p.nome}`} loading="lazy" />
-                <span className={styles.iconBadge}>
-                  <Icon name={p.icon as IconName} size={20} />
-                </span>
-                {p.photos.length > 1 && (
-                  <span className={styles.count}>
-                    <Icon name="image" size={14} /> {p.photos.length}
-                  </span>
-                )}
-              </button>
-              <div className={styles.body}>
-                <h2 className={styles.name}>{p.nome}</h2>
-                <p className={styles.lema}>{p.lema}</p>
-                <p className={styles.desc}>{p.descricao}</p>
-              </div>
-            </motion.article>
-          ))}
-        </div>
+        {loading ? (
+          <Loader />
+        ) : pastorais.length === 0 ? (
+          <EmptyState icon="heart" title="Nenhuma pastoral cadastrada ainda." />
+        ) : (
+          <div className={styles.grid}>
+            {pastorais.map((p, i) => {
+              const capa = p.photos[0];
+              return (
+                <motion.article
+                  key={p.slug}
+                  className={styles.card}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-60px' }}
+                  transition={{ duration: 0.5, delay: (i % 3) * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {capa ? (
+                    <button
+                      className={styles.cover}
+                      data-fit={p.fit}
+                      style={
+                        { '--cover': `url("${imgUrl(capa.image_id, 200)}")` } as React.CSSProperties
+                      }
+                      onClick={() => open(p)}
+                      aria-label={`Ver fotos da pastoral ${p.nome}`}
+                    >
+                      <img src={imgUrl(capa.image_id, 700)} alt={`Pastoral ${p.nome}`} loading="lazy" />
+                      <span className={styles.iconBadge}>
+                        <Icon name={p.icon as IconName} size={20} />
+                      </span>
+                      {p.photos.length > 1 && (
+                        <span className={styles.count}>
+                          <Icon name="image" size={14} /> {p.photos.length}
+                        </span>
+                      )}
+                    </button>
+                  ) : (
+                    <div className={styles.cover}>
+                      <div className={styles.noPhoto}>
+                        <Icon name={p.icon as IconName} size={32} />
+                      </div>
+                    </div>
+                  )}
+                  <div className={styles.body}>
+                    <h2 className={styles.name}>{p.nome}</h2>
+                    {p.lema && <p className={styles.lema}>{p.lema}</p>}
+                    {p.descricao && <p className={styles.desc}>{p.descricao}</p>}
+                  </div>
+                </motion.article>
+              );
+            })}
+          </div>
+        )}
 
         <div className={styles.invite}>
           <h2>Sente o chamado para servir?</h2>

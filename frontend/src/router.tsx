@@ -26,6 +26,8 @@ const AlbumEditPage = lazy(() => import('./admin/AlbumEditPage'));
 const ScheduleAdmin = lazy(() => import('./admin/ScheduleAdmin'));
 const SettingsAdmin = lazy(() => import('./admin/SettingsAdmin'));
 const UsersAdmin = lazy(() => import('./admin/UsersAdmin'));
+const PastoraisAdmin = lazy(() => import('./admin/PastoraisAdmin'));
+const PastoralEditPage = lazy(() => import('./admin/PastoralEditPage'));
 
 function page(el: React.ReactNode) {
   return <Suspense fallback={<Loader />}>{el}</Suspense>;
@@ -73,6 +75,8 @@ export const router = createBrowserRouter([
       { path: 'avisos/:id', element: page(<PostEditPage type="aviso" />) },
       { path: 'galeria', element: page(<AlbumsListPage />) },
       { path: 'galeria/:id', element: page(<AlbumEditPage />) },
+      { path: 'pastorais', element: page(<PastoraisAdmin />) },
+      { path: 'pastorais/:id', element: page(<PastoralEditPage />) },
       { path: 'programacao', element: page(<ScheduleAdmin />) },
       { path: 'configuracoes', element: page(<SettingsAdmin />) },
       { path: 'usuarios', element: page(<UsersAdmin />) },
