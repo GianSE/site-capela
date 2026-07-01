@@ -53,7 +53,10 @@ export function Footer() {
       <div className={styles.bottom}>
         <div className="container">
           <p>
-            © {year} {CAPELA.nome}. Feito com fé pela nossa comunidade.
+            <Link to="/admin/login" className={styles.adminLink} aria-label="Área administrativa">
+              ©
+            </Link>{' '}
+            {year} {CAPELA.nome}. Feito com fé pela nossa comunidade.
           </p>
         </div>
       </div>

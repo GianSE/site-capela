@@ -104,6 +104,13 @@ a.contactItem:hover {
   text-align: center;
 }
 
+/* Atalho discreto para o painel administrativo — visualmente idêntico ao texto. */
+.adminLink {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 @media (max-width: 760px) {
   .inner {
     grid-template-columns: 1fr;
