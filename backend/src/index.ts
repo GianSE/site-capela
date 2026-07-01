@@ -21,6 +21,13 @@ app.route('/api/auth', authRoutes);
 app.route('/api/admin', adminRoutes);
 app.route('/api', publicRoutes);
 
+// Rotas de API inexistentes → 404 JSON (não devolve HTML).
+app.all('/api/*', (c) => c.json({ error: 'Rota não encontrada' }, 404));
+
+// SPA fallback: qualquer outra rota (ex.: /admin, /galeria) entrega o index.html
+// para o React Router assumir no cliente. Sem isso, o acesso direto dá 404.
+app.all('*', (c) => c.env.ASSETS.fetch(c.req.raw));
+
 // Erros não tratados → JSON consistente.
 app.onError((err, c) => {
   console.error('Erro não tratado:', err);
