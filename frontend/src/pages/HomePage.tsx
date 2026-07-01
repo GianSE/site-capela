@@ -158,7 +158,7 @@ export default function HomePage() {
               <Link key={ev.id} to={`/eventos/${ev.slug}`} className={styles.eventCard}>
                 {ev.cover_id && (
                   <div className={styles.eventImage}>
-                    <img src={imgUrl(ev.cover_id)} alt={ev.title} loading="lazy" />
+                    <img src={imgUrl(ev.cover_id, 'thumb')} alt={ev.title} loading="lazy" />
                   </div>
                 )}
                 <div className={styles.eventBody}>
@@ -190,7 +190,7 @@ export default function HomePage() {
               {albuns.slice(0, 3).map((a) => (
                 <Link key={a.id} to={`/galeria/${a.slug}`} className={styles.galleryCard}>
                   {a.cover_id ? (
-                    <img src={imgUrl(a.cover_id)} alt={a.title} loading="lazy" />
+                    <img src={imgUrl(a.cover_id, 'thumb')} alt={a.title} loading="lazy" />
                   ) : (
                     <div className={styles.galleryPlaceholder}>
                       <Icon name="image" size={32} />

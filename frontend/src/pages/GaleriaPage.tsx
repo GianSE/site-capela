@@ -43,7 +43,7 @@ export default function GaleriaPage() {
               <Link key={a.id} to={`/galeria/${a.slug}`} className={styles.card}>
                 <div className={styles.imageWrap}>
                   {a.cover_id ? (
-                    <img src={imgUrl(a.cover_id, 600)} alt={a.title} loading="lazy" />
+                    <img src={imgUrl(a.cover_id, 'thumb')} alt={a.title} loading="lazy" />
                   ) : (
                     <div className={styles.placeholder}>
                       <Icon name="image" size={32} />

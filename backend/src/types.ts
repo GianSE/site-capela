@@ -7,9 +7,12 @@ export interface Env {
   ASSETS: Fetcher;
   JWT_SECRET: string;
   APP_ENV: string;
-  CLOUDINARY_CLOUD_NAME: string;
-  CLOUDINARY_API_KEY: string;
-  CLOUDINARY_API_SECRET: string;
+  // Backblaze B2 (S3-compatível)
+  B2_ENDPOINT: string;
+  B2_REGION: string;
+  B2_BUCKET: string;
+  B2_KEY_ID: string;
+  B2_APP_KEY: string;
 }
 
 /** Payload do token de sessão do admin. */

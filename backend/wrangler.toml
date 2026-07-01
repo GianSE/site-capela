@@ -20,11 +20,13 @@ database_id = "7f52890c-47ba-4ab6-b948-3afc420c1e1d"
 migrations_dir = "migrations"
 
 # Segredos (defina com `wrangler secret put NOME`):
-#   JWT_SECRET             → chave para assinar tokens de sessão do admin
-#   CLOUDINARY_API_SECRET  → segredo do Cloudinary (não versionar!)
+#   JWT_SECRET   → chave para assinar tokens de sessão do admin
+#   B2_APP_KEY   → applicationKey do Backblaze B2 (não versionar!)
 [vars]
 APP_ENV = "production"
-# Cloudinary (armazenamento de fotos, grátis, sem cartão).
-# cloud_name e api_key não são sensíveis; preencha com os seus:
-CLOUDINARY_CLOUD_NAME = "ohqk1n9a"
-CLOUDINARY_API_KEY = "745375866891331"
+# Backblaze B2 (armazenamento de fotos, grátis, sem cartão; egress grátis via Cloudflare).
+# Pegue no painel do B2 (Buckets + Application Keys). Não são segredos fortes:
+B2_ENDPOINT = "https://s3.us-east-005.backblazeb2.com"
+B2_REGION = "us-east-005"
+B2_BUCKET = "SEU_BUCKET"
+B2_KEY_ID = "SEU_KEY_ID"

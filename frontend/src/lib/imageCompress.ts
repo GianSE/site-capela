@@ -1,22 +1,27 @@
 /**
- * Comprime/redimensiona imagens no navegador antes do upload.
- * Reduz o consumo de dados móveis e o espaço no R2, mantendo boa qualidade.
+ * Redimensiona imagens no navegador antes do upload.
+ * Gera 2 variantes por foto: `thumb` (grids/listas) e `full` (lightbox/detalhe).
+ * Assim as fotos são pré-dimensionadas na origem — nada de transformar por view.
  */
 
-const MAX_DIMENSION = 1920;
+const FULL_MAX = 1600;
+const THUMB_MAX = 500;
 const QUALITY = 0.82;
 
-export async function compressImage(file: File): Promise<File> {
-  // Não mexe em formatos que não são raster comuns (ex.: já otimizados, gif animado)
-  if (!/^image\/(jpe?g|png|webp)$/i.test(file.type)) return file;
+export interface Variants {
+  thumb: File;
+  full: File;
+}
 
+/** Redimensiona um File para no máximo `maxDim` (lado maior) em JPEG. */
+async function resize(file: File, maxDim: number): Promise<File> {
   const bitmap = await createImageBitmap(file).catch(() => null);
   if (!bitmap) return file;
 
   const { width, height } = bitmap;
-  const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
-  const targetW = Math.round(width * scale);
-  const targetH = Math.round(height * scale);
+  const scale = Math.min(1, maxDim / Math.max(width, height));
+  const targetW = Math.max(1, Math.round(width * scale));
+  const targetH = Math.max(1, Math.round(height * scale));
 
   const canvas = document.createElement('canvas');
   canvas.width = targetW;
@@ -34,21 +39,12 @@ export async function compressImage(file: File): Promise<File> {
   );
   if (!blob) return file;
 
-  // Se a compressão não ajudou, mantém o original.
-  if (blob.size >= file.size) return file;
-
-  const newName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
-  return new File([blob], newName, { type: 'image/jpeg' });
+  const name = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+  return new File([blob], name, { type: 'image/jpeg' });
 }
 
-export async function compressMany(
-  files: File[],
-  onProgress?: (done: number, total: number) => void
-): Promise<File[]> {
-  const out: File[] = [];
-  for (let i = 0; i < files.length; i++) {
-    out.push(await compressImage(files[i]));
-    onProgress?.(i + 1, files.length);
-  }
-  return out;
+/** Gera as variantes thumb + full de uma imagem. */
+export async function makeVariants(file: File): Promise<Variants> {
+  const [full, thumb] = await Promise.all([resize(file, FULL_MAX), resize(file, THUMB_MAX)]);
+  return { thumb, full };
 }

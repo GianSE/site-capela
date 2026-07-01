@@ -19,9 +19,12 @@ Monorepo com **npm workspaces** (`frontend` + `backend`).
 - **frontend/** — React 18 + Vite 6 + TypeScript + React Router + Framer Motion + CSS Modules.
   Site público (SPA) e painel em `/admin`. Tema mariano (branco, dourado, azul de Fátima),
   títulos em Cormorant Garamond, corpo em Inter.
-- **backend/** — Hono no Cloudflare Workers. **D1** (SQLite) para dados, **Cloudinary**
-  para as fotos (upload/exclusão assinados via API, `backend/src/lib/cloudinary.ts`).
+- **backend/** — Hono no Cloudflare Workers. **D1** (SQLite) para dados, **Backblaze B2**
+  para as fotos (S3 assinado via `aws4fetch`, `backend/src/lib/b2.ts`). As imagens são
+  servidas por `/api/img/:key` (proxy do B2 + cache na borda da Cloudflare).
   Autenticação por sessão (JWT HS256 em cookie httpOnly, senha PBKDF2 via Web Crypto).
+  Cada foto gera 2 variantes no upload (thumb/full); o D1 guarda a "base" e o front pede
+  `{base}_thumb.jpg` ou `{base}_full.jpg` via `imgUrl(base, variante)`. Ver ARQUITETURA-FREE-TIER.md.
 
 **Deploy unificado, sem CORS:** o Worker serve a API em `/api/*` **e** os assets estáticos
 de `frontend/dist` (binding `[assets]` com `not_found_handling = "single-page-application"`).

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, imgUrl } from '../lib/api';
 import { useSeo } from '../hooks/useSeo';
-import { compressMany } from '../lib/imageCompress';
+import { makeVariants } from '../lib/imageCompress';
 import type { AlbumWithPhotos, Photo } from '../types';
 import { Icon } from '../components/Icon/Icon';
 import ui from './admin-ui.module.css';
@@ -86,19 +86,15 @@ export default function AlbumEditPage() {
       navigate(`/admin/galeria/${res.id}`, { replace: true });
     }
 
-    // 1) Comprime todas (mostra progresso da otimização)
-    setProgress({ phase: 'compress', done: 0, total: files.length });
-    const compressed = await compressMany(files, (done, total) =>
-      setProgress({ phase: 'compress', done, total })
-    );
-
-    // 2) Envia UMA POR VEZ — cada foto aparece no grid assim que sobe,
-    //    e a barra vai avançando (feedback gradual).
-    setProgress({ phase: 'upload', done: 0, total: compressed.length });
-    for (let i = 0; i < compressed.length; i++) {
-      const form = new FormData();
-      form.append('files', compressed[i]);
+    // Envia UMA POR VEZ: gera thumb+full, sobe, e a foto aparece no grid
+    // assim que termina — a barra vai avançando (feedback gradual).
+    setProgress({ phase: 'upload', done: 0, total: files.length });
+    for (let i = 0; i < files.length; i++) {
       try {
+        const { thumb, full } = await makeVariants(files[i]);
+        const form = new FormData();
+        form.append('thumb', thumb);
+        form.append('full', full);
         const res = await api.post<{ photos: { id: number; image_id: string }[] }>(
           `/admin/albums/${targetId}/photos`,
           form
@@ -121,7 +117,7 @@ export default function AlbumEditPage() {
       } catch (err) {
         console.error('Falha ao enviar uma foto:', err);
       }
-      setProgress({ phase: 'upload', done: i + 1, total: compressed.length });
+      setProgress({ phase: 'upload', done: i + 1, total: files.length });
     }
 
     // 3) Sincroniza (capa definida automaticamente, ordem etc.)
@@ -242,7 +238,7 @@ export default function AlbumEditPage() {
           <div className={styles.photoGrid}>
             {photos.map((photo) => (
               <div key={photo.id} className={styles.photoCard}>
-                <img src={imgUrl(photo.image_id, 300)} alt={photo.caption ?? ''} loading="lazy" />
+                <img src={imgUrl(photo.image_id, 'thumb')} alt={photo.caption ?? ''} loading="lazy" />
                 {coverPhotoId === photo.id && (
                   <span className={styles.coverBadge}>
                     <Icon name="star" size={12} /> Capa

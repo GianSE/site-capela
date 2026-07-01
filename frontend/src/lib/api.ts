@@ -4,8 +4,6 @@
  * Em produção, mesma origem (o Worker serve o frontend e a API).
  */
 
-import { CLOUDINARY_CLOUD } from '../data/site';
-
 const BASE = '/api';
 
 export class ApiError extends Error {
@@ -56,13 +54,10 @@ export const api = {
 };
 
 /**
- * URL de uma imagem no Cloudinary a partir do public_id.
- * `f_auto,q_auto` = formato e qualidade otimizados automaticamente por dispositivo.
- * Passe `width` para gerar uma miniatura redimensionada (economiza banda).
+ * URL de uma imagem servida pelo Worker (proxy do B2 + cache da Cloudflare).
+ * `base` é a chave guardada no D1; `variant` escolhe o tamanho pré-gerado no upload.
+ *   'thumb' → grids e listas   ·   'full' → lightbox e páginas de detalhe
  */
-export function imgUrl(publicId: string, width?: number): string {
-  // c_limit: reduz até no máximo `width` preservando a proporção (não corta, não amplia).
-  // O corte visual (quando houver) fica por conta do CSS (object-fit: cover).
-  const t = width ? `f_auto,q_auto,c_limit,w_${width}` : 'f_auto,q_auto';
-  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/${t}/${publicId}`;
+export function imgUrl(base: string, variant: 'thumb' | 'full' = 'full'): string {
+  return `${BASE}/img/${base}_${variant}.jpg`;
 }

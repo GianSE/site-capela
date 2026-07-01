@@ -1,16 +1,16 @@
 import { useState, useRef } from 'react';
 import { api, imgUrl } from '../lib/api';
-import { compressImage } from '../lib/imageCompress';
+import { makeVariants } from '../lib/imageCompress';
 import { Icon } from '../components/Icon/Icon';
 import styles from './ImageUploadField.module.css';
 
 interface Props {
-  value: string | null; // r2 key
+  value: string | null; // base key no B2
   onChange: (key: string | null) => void;
   label?: string;
 }
 
-/** Campo de upload de uma imagem de capa (comprime e envia ao R2). */
+/** Campo de upload de uma imagem de capa (gera thumb+full e envia ao B2). */
 export function ImageUploadField({ value, onChange, label = 'Imagem de capa' }: Props) {
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -20,9 +20,10 @@ export function ImageUploadField({ value, onChange, label = 'Imagem de capa' }: 
     if (!file) return;
     setBusy(true);
     try {
-      const compressed = await compressImage(file);
+      const { thumb, full } = await makeVariants(file);
       const form = new FormData();
-      form.append('file', compressed);
+      form.append('thumb', thumb);
+      form.append('full', full);
       const { cover_id } = await api.post<{ cover_id: string }>('/admin/upload', form);
       onChange(cover_id);
     } catch (err) {
@@ -38,7 +39,7 @@ export function ImageUploadField({ value, onChange, label = 'Imagem de capa' }: 
       <span className={styles.label}>{label}</span>
       {value ? (
         <div className={styles.preview}>
-          <img src={imgUrl(value)} alt="Prévia" />
+          <img src={imgUrl(value, 'thumb')} alt="Prévia" />
           <button type="button" className={styles.remove} onClick={() => onChange(null)}>
             <Icon name="close" size={16} /> Remover
           </button>

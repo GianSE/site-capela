@@ -2,24 +2,41 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { requireAuth } from '../middleware/auth';
 import { uniqueSlug } from '../lib/slug';
-import { uploadImage, deleteImage } from '../lib/cloudinary';
+import { putObject, deleteObject, variantKey } from '../lib/b2';
 
 export const adminRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // Tudo aqui exige autenticação.
 adminRoutes.use('*', requireAuth);
 
+/**
+ * Lê as variantes `thumb` e `full` de um FormData (geradas no navegador),
+ * envia ambas ao B2 sob uma base única e devolve a base.
+ * A base é o que fica guardado no D1; o frontend pede `{base}_thumb.jpg` etc.
+ */
+async function storeVariants(env: Env, form: FormData, folder: string): Promise<string> {
+  const thumb = form.get('thumb') as unknown as File | string | null;
+  const full = form.get('full') as unknown as File | string | null;
+  if (!thumb || typeof thumb === 'string' || !full || typeof full === 'string') {
+    throw new Error('Variantes thumb/full ausentes');
+  }
+  const base = `${folder}/${crypto.randomUUID()}`;
+  await putObject(env, variantKey(base, 'thumb'), await thumb.arrayBuffer(), 'image/jpeg');
+  await putObject(env, variantKey(base, 'full'), await full.arrayBuffer(), 'image/jpeg');
+  return base;
+}
+
 // ============================================================
-// UPLOAD avulso (capa de evento/aviso) → Cloudinary, devolve o public_id
+// UPLOAD avulso (capa de evento/aviso) → B2, devolve a base
 // ============================================================
 adminRoutes.post('/upload', async (c) => {
   const form = await c.req.formData();
-  const raw = form.get('file') as unknown as File | string | null;
-  if (!raw || typeof raw === 'string') {
-    return c.json({ error: 'Nenhum arquivo enviado' }, 400);
+  try {
+    const base = await storeVariants(c.env, form, 'capela/covers');
+    return c.json({ cover_id: base }, 201);
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 400);
   }
-  const { publicId } = await uploadImage(c.env, raw, 'capela/covers');
-  return c.json({ cover_id: publicId }, 201);
 });
 
 // ============================================================
@@ -195,13 +212,18 @@ adminRoutes.put('/albums/:id', async (c) => {
 
 adminRoutes.delete('/albums/:id', async (c) => {
   const id = c.req.param('id');
-  // Remove as imagens do Cloudinary antes de apagar as linhas.
+  // Remove as imagens do B2 (ambas as variantes) antes de apagar as linhas.
   const { results } = await c.env.DB.prepare(
     `SELECT image_id FROM photos WHERE album_id = ?`
   )
     .bind(id)
     .all<{ image_id: string }>();
-  await Promise.all(results.map((p) => deleteImage(c.env, p.image_id)));
+  await Promise.all(
+    results.flatMap((p) => [
+      deleteObject(c.env, variantKey(p.image_id, 'thumb')),
+      deleteObject(c.env, variantKey(p.image_id, 'full')),
+    ])
+  );
   await c.env.DB.prepare(`DELETE FROM albums WHERE id = ?`).bind(id).run();
   return c.body(null, 204);
 });
@@ -216,10 +238,14 @@ adminRoutes.post('/albums/:id/photos', async (c) => {
     .first();
   if (!album) return c.json({ error: 'Álbum não encontrado' }, 404);
 
+  // Recebe UMA foto por request, já com as variantes thumb/full (geradas no cliente).
   const form = await c.req.formData();
-  const raw = form.getAll('files') as unknown as Array<File | string>;
-  const files = raw.filter((f): f is File => typeof f !== 'string');
-  if (files.length === 0) return c.json({ error: 'Nenhum arquivo enviado' }, 400);
+  let base: string;
+  try {
+    base = await storeVariants(c.env, form, `capela/albums/${albumId}`);
+  } catch (e) {
+    return c.json({ error: (e as Error).message }, 400);
+  }
 
   // Próxima posição de ordenação
   const last = await c.env.DB.prepare(
@@ -227,23 +253,14 @@ adminRoutes.post('/albums/:id/photos', async (c) => {
   )
     .bind(albumId)
     .first<{ max: number }>();
-  let order = (last?.max ?? 0) + 1;
+  const order = (last?.max ?? 0) + 1;
 
-  const created: unknown[] = [];
-  for (const file of files) {
-    const { publicId, width, height } = await uploadImage(
-      c.env,
-      file,
-      `capela/albums/${albumId}`
-    );
-    const res = await c.env.DB.prepare(
-      `INSERT INTO photos (album_id, image_id, width, height, sort_order)
-       VALUES (?, ?, ?, ?, ?)`
-    )
-      .bind(albumId, publicId, width, height, order++)
-      .run();
-    created.push({ id: res.meta.last_row_id, image_id: publicId });
-  }
+  const res = await c.env.DB.prepare(
+    `INSERT INTO photos (album_id, image_id, sort_order) VALUES (?, ?, ?)`
+  )
+    .bind(albumId, base, order)
+    .run();
+  const created = [{ id: res.meta.last_row_id, image_id: base }];
 
   // Se o álbum ainda não tem capa (ou está órfã), usa a primeira foto.
   await c.env.DB.prepare(
@@ -274,7 +291,10 @@ adminRoutes.delete('/photos/:id', async (c) => {
   const photo = await c.env.DB.prepare(`SELECT image_id, album_id FROM photos WHERE id = ?`)
     .bind(id)
     .first<{ image_id: string; album_id: number }>();
-  if (photo) await deleteImage(c.env, photo.image_id);
+  if (photo) {
+    await deleteObject(c.env, variantKey(photo.image_id, 'thumb'));
+    await deleteObject(c.env, variantKey(photo.image_id, 'full'));
+  }
   await c.env.DB.prepare(`DELETE FROM photos WHERE id = ?`).bind(id).run();
 
   // Se a capa apontava para a foto removida (ou ficou órfã), reatribui à

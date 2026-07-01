@@ -1,8 +1,34 @@
 import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
+import { getObject } from '../lib/b2';
 
 /** Rotas públicas de leitura (sem autenticação). */
 export const publicRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// ---------- Imagem (proxy do B2 + cache na borda da Cloudflare) ----------
+// A 1ª requisição busca do B2 (egress grátis via Bandwidth Alliance); as demais
+// são servidas do cache da Cloudflare (egress grátis, sem tocar o B2).
+publicRoutes.get('/img/:key{.+}', async (c) => {
+  const key = c.req.param('key');
+  const cache = caches.default;
+  const cacheKey = new Request(new URL(c.req.url).toString());
+
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const obj = await getObject(c.env, key);
+  if (!obj.ok || !obj.body) return c.json({ error: 'Imagem não encontrada' }, 404);
+
+  const res = new Response(obj.body, {
+    headers: {
+      'Content-Type': obj.headers.get('Content-Type') ?? 'image/jpeg',
+      // Keys são únicas por upload → cache eterno e imutável.
+      'Cache-Control': 'public, max-age=31536000, immutable',
+    },
+  });
+  c.executionCtx.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
+});
 
 // ---------- Programação da semana ----------
 publicRoutes.get('/schedule', async (c) => {
