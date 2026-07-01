@@ -24,7 +24,7 @@ export const CAPELA = {
  * Nome da sua conta Cloudinary (cloud name) — não é segredo.
  * Pegue no painel do Cloudinary (Dashboard → "Cloud name") e preencha aqui.
  */
-export const CLOUDINARY_CLOUD = 'SEU_CLOUD_NAME';
+export const CLOUDINARY_CLOUD = 'ohqk1n9a';
 
 export const NAV_LINKS = [
   { label: 'Início', to: '/' },

@@ -64,13 +64,15 @@ export async function uploadImage(
   return { publicId: data.public_id, width: data.width ?? null, height: data.height ?? null };
 }
 
-/** Remove uma imagem do Cloudinary pelo public_id. */
+/** Remove uma imagem do Cloudinary pelo public_id (e limpa o cache da CDN). */
 export async function deleteImage(env: Env, publicId: string): Promise<void> {
   const timestamp = Math.floor(Date.now() / 1000).toString();
-  const signature = await sign({ public_id: publicId, timestamp }, env.CLOUDINARY_API_SECRET);
+  const signParams = { invalidate: 'true', public_id: publicId, timestamp };
+  const signature = await sign(signParams, env.CLOUDINARY_API_SECRET);
 
   const form = new FormData();
   form.append('public_id', publicId);
+  form.append('invalidate', 'true');
   form.append('api_key', env.CLOUDINARY_API_KEY);
   form.append('timestamp', timestamp);
   form.append('signature', signature);

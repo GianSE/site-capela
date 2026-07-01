@@ -26,5 +26,5 @@ migrations_dir = "migrations"
 APP_ENV = "production"
 # Cloudinary (armazenamento de fotos, grátis, sem cartão).
 # cloud_name e api_key não são sensíveis; preencha com os seus:
-CLOUDINARY_CLOUD_NAME = "SEU_CLOUD_NAME"
-CLOUDINARY_API_KEY = "SUA_API_KEY"
+CLOUDINARY_CLOUD_NAME = "ohqk1n9a"
+CLOUDINARY_API_KEY = "745375866891331"
