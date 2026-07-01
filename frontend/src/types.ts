@@ -79,6 +79,10 @@ export interface Pastoral {
   fit: 'cover' | 'contain';
   sort_order: number;
   published: number;
-  photo_count?: number; // resolvido pela API (admin)
-  photos: PastoralPhoto[];
+  photo_count?: number; // resolvido pela API (lista admin)
+  cover_id?: string | null; // capa resolvida pela API (lista admin)
+}
+
+export interface PastoralWithPhotos extends Pastoral {
+  photos: PastoralPhoto[]; // presente em /pastorais (público) e /admin/pastorais/:id
 }

@@ -9,7 +9,7 @@ import { Icon } from '../components/Icon/Icon';
 import type { IconName } from '../components/Icon/Icon';
 import { CAPELA } from '../data/site';
 import { imgUrl } from '../lib/api';
-import type { Pastoral } from '../types';
+import type { PastoralWithPhotos } from '../types';
 import styles from './PastoraisPage.module.css';
 
 export default function PastoraisPage() {
@@ -19,7 +19,7 @@ export default function PastoraisPage() {
       'Conheça as pastorais da Capela Nossa Senhora de Fátima e as equipes que dão vida à nossa comunidade: Catequese, Liturgia, Legião de Maria, Música, Social e muito mais.',
   });
 
-  const { data, loading } = useFetch<Pastoral[]>('/pastorais', []);
+  const { data, loading } = useFetch<PastoralWithPhotos[]>('/pastorais', []);
   const pastorais = data ?? [];
 
   // Lightbox: fotos da pastoral aberta + índice atual
@@ -50,7 +50,7 @@ export default function PastoraisPage() {
     };
   }, [lb, close, prev, next]);
 
-  function open(p: Pastoral) {
+  function open(p: PastoralWithPhotos) {
     setLb({ photos: p.photos.map((ph) => imgUrl(ph.image_id)), i: 0, nome: p.nome });
   }
 

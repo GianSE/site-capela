@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { api, imgUrl } from '../lib/api';
 import { useSeo } from '../hooks/useSeo';
 import { compressMany } from '../lib/imageCompress';
-import type { Pastoral, PastoralPhoto } from '../types';
+import type { PastoralWithPhotos, PastoralPhoto } from '../types';
 import { Icon } from '../components/Icon/Icon';
 import type { IconName } from '../components/Icon/Icon';
 import ui from './admin-ui.module.css';
@@ -49,7 +49,7 @@ export default function PastoralEditPage() {
 
   useEffect(() => {
     if (isNew) return;
-    api.get<Pastoral>(`/admin/pastorais/${id}`).then((p) => {
+    api.get<PastoralWithPhotos>(`/admin/pastorais/${id}`).then((p) => {
       setNome(p.nome);
       setLema(p.lema ?? '');
       setDescricao(p.descricao ?? '');

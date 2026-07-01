@@ -322,7 +322,10 @@ adminRoutes.put('/albums/:id/photos/order', async (c) => {
 // ============================================================
 adminRoutes.get('/pastorais', async (c) => {
   const { results } = await c.env.DB.prepare(
-    `SELECT p.*, (SELECT COUNT(*) FROM pastoral_photos pp WHERE pp.pastoral_id = p.id) AS photo_count
+    `SELECT p.*,
+            (SELECT COUNT(*) FROM pastoral_photos pp WHERE pp.pastoral_id = p.id) AS photo_count,
+            (SELECT image_id FROM pastoral_photos pp2
+              WHERE pp2.pastoral_id = p.id ORDER BY pp2.sort_order, pp2.id LIMIT 1) AS cover_id
        FROM pastorais p
       ORDER BY p.sort_order, p.id`
   ).all();

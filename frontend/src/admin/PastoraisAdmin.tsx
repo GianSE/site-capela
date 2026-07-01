@@ -86,8 +86,8 @@ export default function PastoraisAdmin() {
                 </button>
               </div>
 
-              {p.photos[0] ? (
-                <img src={imgUrl(p.photos[0].image_id, 128)} alt="" className={ui.itemThumb} />
+              {p.cover_id ? (
+                <img src={imgUrl(p.cover_id, 128)} alt="" className={ui.itemThumb} />
               ) : (
                 <div className={ui.itemThumb} style={{ display: 'grid', placeItems: 'center' }}>
                   <Icon name={p.icon as IconName} size={22} />
@@ -97,8 +97,8 @@ export default function PastoraisAdmin() {
               <div className={ui.itemBody}>
                 <h3>{p.nome}</h3>
                 <p>
-                  {p.photo_count ?? p.photos.length} foto
-                  {(p.photo_count ?? p.photos.length) === 1 ? '' : 's'}
+                  {p.photo_count ?? 0} foto
+                  {(p.photo_count ?? 0) === 1 ? '' : 's'}
                 </p>
               </div>
               <span className={`${ui.badge} ${p.published ? ui.badgePublished : ui.badgeDraft}`}>
