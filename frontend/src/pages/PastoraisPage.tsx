@@ -70,6 +70,7 @@ export default function PastoraisPage() {
               <button
                 className={styles.cover}
                 data-fit={p.fit ?? 'cover'}
+                style={{ ['--cover' as string]: `url("${p.photos[0]}")` } as React.CSSProperties}
                 onClick={() => open(p)}
                 aria-label={`Ver fotos da pastoral ${p.nome}`}
               >

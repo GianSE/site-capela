@@ -196,8 +196,13 @@ export default function HomePage() {
             {proximosEventos.map((ev) => (
               <Link key={ev.id} to={`/eventos/${ev.slug}`} className={styles.eventCard}>
                 {ev.cover_id && (
-                  <div className={styles.eventImage}>
-                    <img src={imgUrl(ev.cover_id)} alt={ev.title} loading="lazy" />
+                  <div
+                    className={styles.eventImage}
+                    style={
+                      { '--cover': `url("${imgUrl(ev.cover_id, 200)}")` } as React.CSSProperties
+                    }
+                  >
+                    <img src={imgUrl(ev.cover_id, 800)} alt={ev.title} loading="lazy" />
                   </div>
                 )}
                 <div className={styles.eventBody}>
@@ -227,9 +232,18 @@ export default function HomePage() {
             />
             <div className={styles.galleryGrid}>
               {albuns.slice(0, 3).map((a) => (
-                <Link key={a.id} to={`/galeria/${a.slug}`} className={styles.galleryCard}>
+                <Link
+                  key={a.id}
+                  to={`/galeria/${a.slug}`}
+                  className={styles.galleryCard}
+                  style={
+                    a.cover_id
+                      ? ({ '--cover': `url("${imgUrl(a.cover_id, 200)}")` } as React.CSSProperties)
+                      : undefined
+                  }
+                >
                   {a.cover_id ? (
-                    <img src={imgUrl(a.cover_id)} alt={a.title} loading="lazy" />
+                    <img src={imgUrl(a.cover_id, 600)} alt={a.title} loading="lazy" />
                   ) : (
                     <div className={styles.galleryPlaceholder}>
                       <Icon name="image" size={32} />

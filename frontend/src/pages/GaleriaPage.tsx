@@ -74,7 +74,14 @@ export default function GaleriaPage() {
             <div className={styles.grid}>
               {visiveis.map((a) => (
                 <Link key={a.id} to={`/galeria/${a.slug}`} className={styles.card}>
-                  <div className={styles.imageWrap}>
+                  <div
+                    className={styles.imageWrap}
+                    style={
+                      a.cover_id
+                        ? ({ '--cover': `url("${imgUrl(a.cover_id, 200)}")` } as React.CSSProperties)
+                        : undefined
+                    }
+                  >
                     {a.cover_id ? (
                       <img src={imgUrl(a.cover_id, 600)} alt={a.title} loading="lazy" />
                     ) : (

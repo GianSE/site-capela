@@ -299,13 +299,26 @@
   box-shadow: var(--shadow-lg);
 }
 .eventImage {
+  position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
+  background: var(--blue-900);
+}
+.eventImage::before {
+  content: '';
+  position: absolute;
+  inset: -8%;
+  background-image: var(--cover);
+  background-size: cover;
+  background-position: center;
+  filter: blur(16px) brightness(0.8);
 }
 .eventImage img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .eventBody {
   display: flex;
@@ -343,15 +356,27 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
+  background: var(--blue-900);
+}
+.galleryCard::before {
+  content: '';
+  position: absolute;
+  inset: -8%;
+  background-image: var(--cover);
+  background-size: cover;
+  background-position: center;
+  filter: blur(16px) brightness(0.8);
 }
 .galleryCard img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform var(--dur-slow) var(--ease-out);
 }
 .galleryCard:hover img {
-  transform: scale(1.06);
+  transform: scale(1.04);
 }
 .galleryPlaceholder {
   width: 100%;
@@ -363,6 +388,7 @@
 }
 .galleryOverlay {
   position: absolute;
+  z-index: 2;
   inset: auto 0 0 0;
   padding: var(--space-5) var(--space-4) var(--space-4);
   background: linear-gradient(transparent, rgba(11, 31, 58, 0.85));
