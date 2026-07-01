@@ -1,9 +1,12 @@
 .wrap {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: var(--space-5);
+  min-height: 100dvh; /* evita cortes/saltos quando o teclado mobile abre */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
   background: var(--gradient-blue);
+  overflow-y: auto;
 }
 
 .card {
@@ -20,6 +23,15 @@
 }
 .card h1 {
   font-size: var(--fs-2xl);
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .card {
+    padding: var(--space-5) var(--space-4);
+    gap: var(--space-2);
+    border-radius: var(--radius-lg);
+  }
 }
 .sub {
   font-size: var(--fs-sm);
