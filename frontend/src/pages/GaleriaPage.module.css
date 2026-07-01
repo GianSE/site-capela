@@ -3,6 +3,33 @@
   min-height: 40vh;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.filterBtn {
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  color: var(--text-soft);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  transition: background var(--dur-fast), color var(--dur-fast), border-color var(--dur-fast);
+}
+.filterBtn:hover {
+  border-color: var(--gold-400);
+  color: var(--blue-900);
+}
+.filterBtn.active {
+  color: var(--blue-900);
+  background: var(--gold-200);
+  border-color: var(--gold-400);
+  font-weight: var(--fw-semibold);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

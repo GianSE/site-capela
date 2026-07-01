@@ -35,6 +35,7 @@ export interface Album {
   event_date: string | null;
   cover_photo_id: number | null;
   cover_id: string | null; // public_id da capa (resolvido pela API via join)
+  category: string; // missas | mutiroes | eventos | outros
   photo_count: number; // resolvido pela API
   published: number;
   created_at: string;

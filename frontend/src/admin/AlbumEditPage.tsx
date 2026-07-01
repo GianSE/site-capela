@@ -4,6 +4,7 @@ import { api, imgUrl } from '../lib/api';
 import { useSeo } from '../hooks/useSeo';
 import { compressMany } from '../lib/imageCompress';
 import type { AlbumWithPhotos, Photo } from '../types';
+import { ALBUM_CATEGORIES } from '../data/albumCategories';
 import { Icon } from '../components/Icon/Icon';
 import ui from './admin-ui.module.css';
 import styles from './AlbumEditPage.module.css';
@@ -18,6 +19,7 @@ export default function AlbumEditPage() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState('');
+  const [category, setCategory] = useState('outros');
   const [published, setPublished] = useState(true);
   const [coverPhotoId, setCoverPhotoId] = useState<number | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -35,6 +37,7 @@ export default function AlbumEditPage() {
       setTitle(a.title);
       setDescription(a.description ?? '');
       setEventDate(a.event_date ? a.event_date.slice(0, 10) : '');
+      setCategory(a.category ?? 'outros');
       setPublished(!!a.published);
       setCoverPhotoId(a.cover_photo_id);
       setPhotos(a.photos);
@@ -49,6 +52,7 @@ export default function AlbumEditPage() {
         title,
         description: description || null,
         event_date: eventDate || null,
+        category,
         published,
       };
       if (isNew || albumId === null) {
@@ -79,6 +83,7 @@ export default function AlbumEditPage() {
         title,
         description: description || null,
         event_date: eventDate || null,
+        category,
         published,
       });
       targetId = res.id;
@@ -166,15 +171,25 @@ export default function AlbumEditPage() {
             <label>Data</label>
             <input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
           </div>
-          <label className={ui.checkbox} style={{ alignSelf: 'end', paddingBottom: 12 }}>
-            <input
-              type="checkbox"
-              checked={published}
-              onChange={(e) => setPublished(e.target.checked)}
-            />
-            Publicar no site
-          </label>
+          <div className={ui.field}>
+            <label>Categoria</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)}>
+              {ALBUM_CATEGORIES.map((c) => (
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+        <label className={ui.checkbox}>
+          <input
+            type="checkbox"
+            checked={published}
+            onChange={(e) => setPublished(e.target.checked)}
+          />
+          Publicar no site
+        </label>
         <div className={ui.field}>
           <label>Descrição</label>
           <textarea

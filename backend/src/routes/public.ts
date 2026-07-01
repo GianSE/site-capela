@@ -65,7 +65,7 @@ publicRoutes.get('/albums', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 100, 100);
   const { results } = await c.env.DB.prepare(
     `SELECT a.id, a.slug, a.title, a.description, a.event_date, a.cover_photo_id,
-            a.published, a.created_at,
+            a.category, a.published, a.created_at,
             cp.image_id AS cover_id,
             (SELECT COUNT(*) FROM photos p WHERE p.album_id = a.id) AS photo_count
        FROM albums a
@@ -83,7 +83,7 @@ publicRoutes.get('/albums/:slug', async (c) => {
   const slug = c.req.param('slug');
   const album = await c.env.DB.prepare(
     `SELECT a.id, a.slug, a.title, a.description, a.event_date, a.cover_photo_id,
-            a.published, a.created_at,
+            a.category, a.published, a.created_at,
             cp.image_id AS cover_id,
             (SELECT COUNT(*) FROM photos p WHERE p.album_id = a.id) AS photo_count
        FROM albums a

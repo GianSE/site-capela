@@ -149,8 +149,12 @@ interface AlbumInput {
   title?: string;
   description?: string;
   event_date?: string;
+  category?: string;
   published?: boolean;
 }
+
+const CATEGORIES = ['missas', 'mutiroes', 'eventos', 'outros'];
+const normCategory = (c?: string) => (c && CATEGORIES.includes(c) ? c : 'outros');
 
 adminRoutes.post('/albums', async (c) => {
   const b = await c.req.json<AlbumInput>().catch(() => ({}) as AlbumInput);
@@ -160,10 +164,17 @@ adminRoutes.post('/albums', async (c) => {
     return !!r;
   });
   const res = await c.env.DB.prepare(
-    `INSERT INTO albums (slug, title, description, event_date, published)
-     VALUES (?, ?, ?, ?, ?)`
+    `INSERT INTO albums (slug, title, description, event_date, category, published)
+     VALUES (?, ?, ?, ?, ?, ?)`
   )
-    .bind(slug, b.title, b.description ?? null, b.event_date || null, b.published ? 1 : 0)
+    .bind(
+      slug,
+      b.title,
+      b.description ?? null,
+      b.event_date || null,
+      normCategory(b.category),
+      b.published ? 1 : 0
+    )
     .run();
   return c.json({ id: res.meta.last_row_id, slug }, 201);
 });
@@ -177,6 +188,7 @@ adminRoutes.put('/albums/:id', async (c) => {
        title = COALESCE(?, title),
        description = ?,
        event_date = ?,
+       category = COALESCE(?, category),
        cover_photo_id = COALESCE(?, cover_photo_id),
        published = COALESCE(?, published)
      WHERE id = ?`
@@ -185,6 +197,7 @@ adminRoutes.put('/albums/:id', async (c) => {
       b.title ?? null,
       b.description ?? null,
       b.event_date || null,
+      b.category ? normCategory(b.category) : null,
       b.cover_photo_id ?? null,
       b.published === undefined ? null : b.published ? 1 : 0,
       id
