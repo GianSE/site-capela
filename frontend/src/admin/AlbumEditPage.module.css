@@ -1,6 +1,45 @@
 .uploadSection {
   margin-top: var(--space-6);
 }
+
+/* Barra de progresso do upload */
+.progressBox {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--gold-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+.progressHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-base);
+  color: var(--blue-900);
+}
+.progressHead strong {
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-strong);
+}
+.progressTrack {
+  height: 10px;
+  background: var(--sand);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+.progressFill {
+  height: 100%;
+  background: var(--gradient-gold);
+  border-radius: var(--radius-full);
+  transition: width 0.3s var(--ease-out);
+}
+.progressHint {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
 .uploadSection h2 {
   font-size: var(--fs-xl);
   margin-bottom: var(--space-4);

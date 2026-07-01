@@ -86,7 +86,7 @@ export default function AlbumPage() {
                 aria-label={`Abrir foto ${i + 1}`}
               >
                 <img
-                  src={imgUrl(photo.image_id)}
+                  src={imgUrl(photo.image_id, 500)}
                   alt={photo.caption ?? `Foto ${i + 1}`}
                   loading="lazy"
                 />

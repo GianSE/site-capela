@@ -245,13 +245,16 @@ adminRoutes.post('/albums/:id/photos', async (c) => {
     created.push({ id: res.meta.last_row_id, image_id: publicId });
   }
 
-  // Se o álbum ainda não tem capa, usa a primeira foto enviada.
+  // Se o álbum ainda não tem capa (ou está órfã), usa a primeira foto.
   await c.env.DB.prepare(
     `UPDATE albums SET cover_photo_id = (
        SELECT id FROM photos WHERE album_id = ? ORDER BY sort_order, id LIMIT 1
-     ) WHERE id = ? AND cover_photo_id IS NULL`
+     )
+     WHERE id = ?
+       AND (cover_photo_id IS NULL
+            OR cover_photo_id NOT IN (SELECT id FROM photos WHERE album_id = ?))`
   )
-    .bind(albumId, albumId)
+    .bind(albumId, albumId, albumId)
     .run();
 
   return c.json({ uploaded: created.length, photos: created }, 201);
@@ -268,11 +271,26 @@ adminRoutes.put('/photos/:id', async (c) => {
 
 adminRoutes.delete('/photos/:id', async (c) => {
   const id = c.req.param('id');
-  const photo = await c.env.DB.prepare(`SELECT image_id FROM photos WHERE id = ?`)
+  const photo = await c.env.DB.prepare(`SELECT image_id, album_id FROM photos WHERE id = ?`)
     .bind(id)
-    .first<{ image_id: string }>();
+    .first<{ image_id: string; album_id: number }>();
   if (photo) await deleteImage(c.env, photo.image_id);
   await c.env.DB.prepare(`DELETE FROM photos WHERE id = ?`).bind(id).run();
+
+  // Se a capa apontava para a foto removida (ou ficou órfã), reatribui à
+  // primeira foto restante do álbum (ou NULL se não houver mais nenhuma).
+  if (photo) {
+    await c.env.DB.prepare(
+      `UPDATE albums SET cover_photo_id = (
+         SELECT id FROM photos WHERE album_id = ? ORDER BY sort_order, id LIMIT 1
+       )
+       WHERE id = ?
+         AND (cover_photo_id IS NULL
+              OR cover_photo_id NOT IN (SELECT id FROM photos WHERE album_id = ?))`
+    )
+      .bind(photo.album_id, photo.album_id, photo.album_id)
+      .run();
+  }
   return c.body(null, 204);
 });
 

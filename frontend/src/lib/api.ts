@@ -61,6 +61,8 @@ export const api = {
  * Passe `width` para gerar uma miniatura redimensionada (economiza banda).
  */
 export function imgUrl(publicId: string, width?: number): string {
-  const t = width ? `f_auto,q_auto,c_fill,w_${width}` : 'f_auto,q_auto';
+  // c_limit: reduz até no máximo `width` preservando a proporção (não corta, não amplia).
+  // O corte visual (quando houver) fica por conta do CSS (object-fit: cover).
+  const t = width ? `f_auto,q_auto,c_limit,w_${width}` : 'f_auto,q_auto';
   return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/upload/${t}/${publicId}`;
 }

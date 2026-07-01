@@ -22,7 +22,11 @@ export default function AlbumEditPage() {
   const [coverPhotoId, setCoverPhotoId] = useState<number | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [saving, setSaving] = useState(false);
-  const [uploadInfo, setUploadInfo] = useState('');
+  const [progress, setProgress] = useState<{
+    phase: 'compress' | 'upload';
+    done: number;
+    total: number;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -82,21 +86,49 @@ export default function AlbumEditPage() {
       navigate(`/admin/galeria/${res.id}`, { replace: true });
     }
 
-    setUploadInfo(`Preparando ${files.length} foto(s)…`);
+    // 1) Comprime todas (mostra progresso da otimização)
+    setProgress({ phase: 'compress', done: 0, total: files.length });
     const compressed = await compressMany(files, (done, total) =>
-      setUploadInfo(`Otimizando ${done}/${total}…`)
+      setProgress({ phase: 'compress', done, total })
     );
 
-    setUploadInfo('Enviando…');
-    const form = new FormData();
-    compressed.forEach((f) => form.append('files', f));
-    await api.post(`/admin/albums/${targetId}/photos`, form);
+    // 2) Envia UMA POR VEZ — cada foto aparece no grid assim que sobe,
+    //    e a barra vai avançando (feedback gradual).
+    setProgress({ phase: 'upload', done: 0, total: compressed.length });
+    for (let i = 0; i < compressed.length; i++) {
+      const form = new FormData();
+      form.append('files', compressed[i]);
+      try {
+        const res = await api.post<{ photos: { id: number; image_id: string }[] }>(
+          `/admin/albums/${targetId}/photos`,
+          form
+        );
+        const p = res.photos?.[0];
+        if (p) {
+          setPhotos((prev) => [
+            ...prev,
+            {
+              id: p.id,
+              album_id: targetId as number,
+              image_id: p.image_id,
+              caption: null,
+              width: null,
+              height: null,
+              sort_order: prev.length + 1,
+            },
+          ]);
+        }
+      } catch (err) {
+        console.error('Falha ao enviar uma foto:', err);
+      }
+      setProgress({ phase: 'upload', done: i + 1, total: compressed.length });
+    }
 
-    // Recarrega as fotos
+    // 3) Sincroniza (capa definida automaticamente, ordem etc.)
     const fresh = await api.get<AlbumWithPhotos>(`/admin/albums/${targetId}`);
     setPhotos(fresh.photos);
     setCoverPhotoId(fresh.cover_photo_id);
-    setUploadInfo('');
+    setProgress(null);
     if (inputRef.current) inputRef.current.value = '';
   }
 
@@ -162,16 +194,41 @@ export default function AlbumEditPage() {
       <div className={styles.uploadSection}>
         <h2>Fotos {photos.length > 0 && <span>({photos.length})</span>}</h2>
 
-        <button
-          type="button"
-          className={styles.uploadZone}
-          onClick={() => inputRef.current?.click()}
-          disabled={!!uploadInfo}
-        >
-          <Icon name="image" size={32} />
-          <strong>{uploadInfo || 'Adicionar fotos'}</strong>
-          <span>Toque para escolher várias fotos do seu celular ou computador</span>
-        </button>
+        {progress ? (
+          <div className={styles.progressBox}>
+            <div className={styles.progressHead}>
+              <span>
+                {progress.phase === 'compress' ? 'Otimizando fotos…' : 'Enviando fotos…'}
+              </span>
+              <strong>
+                {progress.done}/{progress.total}
+              </strong>
+            </div>
+            <div className={styles.progressTrack}>
+              <div
+                className={styles.progressFill}
+                style={{
+                  width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%`,
+                }}
+              />
+            </div>
+            <span className={styles.progressHint}>
+              {progress.phase === 'upload'
+                ? 'As fotos vão aparecendo abaixo conforme são enviadas.'
+                : 'Preparando as imagens para envio…'}
+            </span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={styles.uploadZone}
+            onClick={() => inputRef.current?.click()}
+          >
+            <Icon name="image" size={32} />
+            <strong>Adicionar fotos</strong>
+            <span>Toque para escolher várias fotos do seu celular ou computador</span>
+          </button>
+        )}
         <input
           ref={inputRef}
           type="file"
@@ -185,7 +242,7 @@ export default function AlbumEditPage() {
           <div className={styles.photoGrid}>
             {photos.map((photo) => (
               <div key={photo.id} className={styles.photoCard}>
-                <img src={imgUrl(photo.image_id)} alt={photo.caption ?? ''} loading="lazy" />
+                <img src={imgUrl(photo.image_id, 300)} alt={photo.caption ?? ''} loading="lazy" />
                 {coverPhotoId === photo.id && (
                   <span className={styles.coverBadge}>
                     <Icon name="star" size={12} /> Capa
