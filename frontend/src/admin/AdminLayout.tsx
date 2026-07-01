@@ -30,7 +30,7 @@ export function AdminLayout() {
     <div className={styles.shell}>
       <aside className={styles.sidebar}>
         <div className={styles.brand}>
-          <img src="/favicon.svg" alt="" width={36} height={36} />
+          <img src="/img/logo-fatima-gold.png" alt="" width={38} height={38} />
           <div>
             <strong>Painel</strong>
             <span>Capela N. S. de Fátima</span>

@@ -28,7 +28,7 @@ export function Navbar() {
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
       <div className={`container ${styles.inner}`}>
         <Link to="/" className={styles.brand} onClick={() => setOpen(false)}>
-          <img src="/favicon.svg" alt="" className={styles.brandIcon} width={40} height={40} />
+          <img src="/img/logo-fatima.png" alt="" className={styles.brandIcon} width={44} height={44} />
           <span className={styles.brandText}>
             <strong>Capela</strong>
             <span>N. S. de Fátima</span>

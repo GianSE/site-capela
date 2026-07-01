@@ -11,7 +11,7 @@ export function Footer() {
       <div className={`container ${styles.inner}`}>
         <div className={styles.brandCol}>
           <div className={styles.brand}>
-            <img src="/favicon.svg" alt="" width={44} height={44} />
+            <img src="/img/logo-fatima-gold.png" alt="" width={48} height={48} />
             <div>
               <strong>{CAPELA.nomeCurto}</strong>
               <span>{CAPELA.paroquia}</span>

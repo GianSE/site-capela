@@ -35,7 +35,8 @@ export default function HomePage() {
     <>
       {/* ===================== HERO ===================== */}
       <section className={styles.hero}>
-        <div className={styles.heroGlow} aria-hidden="true" />
+        <div className={styles.heroBg} aria-hidden="true" />
+        <div className={styles.heroOverlay} aria-hidden="true" />
         <div className={`container ${styles.heroInner}`}>
           <motion.div
             className={styles.heroContent}
@@ -43,6 +44,13 @@ export default function HomePage() {
             animate="show"
             variants={fadeUp}
           >
+            <img
+              src="/img/logo-fatima-gold.png"
+              alt="Nossa Senhora de Fátima"
+              className={styles.heroLogo}
+              width={116}
+              height={116}
+            />
             <p className={styles.heroBadge}>
               <Icon name="star" size={16} />
               {CAPELA.paroquia}
@@ -64,20 +72,9 @@ export default function HomePage() {
               <Button to="/eventos" size="lg">
                 Próximos eventos <Icon name="arrowRight" size={18} />
               </Button>
-              <Button href="#programacao" variant="ghost" size="lg">
+              <a href="#programacao" className={styles.heroSecondary}>
                 Programação da semana
-              </Button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            className={styles.heroImage}
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
-          >
-            <div className={styles.heroImageRing}>
-              <img src="/logo-nossa-senhora.png" alt="Nossa Senhora de Fátima" width={360} height={420} />
+              </a>
             </div>
           </motion.div>
         </div>

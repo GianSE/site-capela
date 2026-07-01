@@ -2,15 +2,19 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  /* Sempre com um fundo glass claro — legível sobre o hero (foto escura) e sobre
+     os cabeçalhos internos (azul), em qualquer página. */
+  background: rgba(251, 249, 244, 0.82);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid transparent;
   transition: background var(--dur-base), box-shadow var(--dur-base),
-    backdrop-filter var(--dur-base);
+    border-color var(--dur-base);
 }
 
 .header.scrolled {
-  background: rgba(251, 249, 244, 0.85);
-  backdrop-filter: blur(12px);
+  background: rgba(251, 249, 244, 0.92);
   box-shadow: var(--shadow-sm);
-  border-bottom: 1px solid var(--border);
+  border-bottom-color: var(--border);
 }
 
 .inner {

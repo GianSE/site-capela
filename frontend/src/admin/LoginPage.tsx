@@ -33,7 +33,7 @@ export default function LoginPage() {
   return (
     <div className={styles.wrap}>
       <form className={styles.card} onSubmit={handleSubmit}>
-        <img src="/favicon.svg" alt="" width={56} height={56} />
+        <img src="/img/logo-fatima-gold.png" alt="" width={64} height={64} />
         <h1>Painel da Capela</h1>
         <p className={styles.sub}>Acesso restrito à administração</p>
 
