@@ -33,15 +33,20 @@ compartilhado entre muitos sites.
 
 ```
 Site estático (HTML/JS/CSS)  → Cloudflare Pages / Workers Assets   [ILIMITADO]
-Imagens e arquivos           → Backblaze B2, servidos com cache da Cloudflare
-                               (egress B2→Cloudflare é grátis; a borda cacheia o resto)
+Imagens (padrão)             → Cloudinary, 1 conta por site (CDN + f_auto/q_auto + resize)
+Imagens (storage-heavy)      → Backblaze B2 + cache da Cloudflare (egress grátis)
 Lógica dinâmica (API/auth)   → Workers                              [enxuto: 100k/dia/conta]
 Dados estruturados           → D1                                   [leituras baratas]
-Transformação de imagem      → pré-gerar no upload (padrão) OU Cloudinary só quando
-                               precisar transformar on-the-fly (e sempre com cache duro)
 ```
 
+> Ver a seção **"Imagens: qual escolher"** abaixo — a decisão Cloudinary vs B2 é o ponto
+> central e depende de cada site (mídia vs storage).
+
 ## Os 3 movimentos que fazem caber mais sites
+
+> Com **Cloudinary (Padrão A)**, os movimentos 1 e 2 já vêm de graça (CDN próprio +
+> `f_auto`/resize on-the-fly). As técnicas abaixo importam sobretudo no **Padrão B (B2)** e
+> como princípio geral de cache. O movimento 3 vale para os dois.
 
 ### 1. Imagem não passa por Worker à toa — e quando passa, cacheia forte
 Servir imagem pelo Worker gasta o orçamento de 100k/dia (compartilhado). Duas formas de
@@ -70,31 +75,58 @@ Cada arquivo recebe um id único (UUID) e **nunca** é sobrescrito. Isso permite
 para sempre e o origin quase nunca é chamado. Ao trocar a imagem, gera-se uma **nova** key
 (a antiga expira sozinha).
 
-## Onde cada armazenamento se encaixa
+## Imagens: qual escolher (a decisão que importa)
 
-- **Backblaze B2** = origem durável dos arquivos. 10 GB grátis, egress grátis via Cloudflare.
-  É o "arroz com feijão" escalável para muitos sites. Acesso via API S3-compatível.
-- **Cloudinary** = conveniência de transformação dinâmica. Use só nos sites que realmente
-  precisam, sempre com cache na frente. Não deixe ser o pipeline padrão de todos os sites.
+Aqui vale uma correção importante em relação à intuição de "B2 é sempre mais barato":
+**para mídia em si, o Cloudinary é tecnicamente melhor** — ele entrega WebP/AVIF por
+navegador (`f_auto`), redimensiona on-the-fly, tem CDN próprio (não toca seus recursos
+Cloudflare) e não exige código. O B2 só compensa quando o gargalo é **storage** ou quando
+os 25 créditos de **uma** conta Cloudinary não dão conta de muitos sites.
+
+Mas esse "muitos sites" tem uma saída mais simples que trocar de tecnologia:
+
+> **Padrão recomendado: Cloudinary, uma conta grátis por site (ou por grupo de sites).**
+> Cada conta = 25 créditos novos, sem cartão. Você multiplica o orçamento **mantendo**
+> todas as vantagens de mídia do Cloudinary e **sem gastar Worker** com imagem.
+
+### Regra de bolso
+
+| Situação do site | Melhor escolha |
+|---|---|
+| Site comum, baixo/médio tráfego | **Cloudinary** (conta própria) — melhor entrega, zero código |
+| Muitos sites | **Cloudinary com contas separadas** (multiplica o grátis) |
+| **Storage-heavy** (milhares de fotos, GBs) | **B2 + Cloudflare** (10GB + egress grátis) |
+| Quer parar de depender de terceiro | B2 + Cloudflare (você dono do pipeline) |
+
 - **Cloudflare R2** = alternativa ótima ao B2 (egress grátis nativo), mas **exige cartão** no
-  cadastro mesmo no grátis. Evitado aqui por isso.
+  cadastro mesmo no grátis. Evitado por isso.
 
-## Padrão de projeto recomendado (o "starter")
+## Padrão A (recomendado) — Cloudinary por conta
 
 ```
-Frontend (React/Vite) estático  ──►  Cloudflare Workers Assets  (hospedagem grátis)
-        │
-        ├─ /api/*        ──►  Worker (Hono)  ──►  D1 (metadados)
-        │                                     └►  B2 (upload/delete via S3 assinado)
-        └─ /api/img/:key ──►  Worker  ──►  Cache API  ──►  (miss) B2 público
-                                              └► hit: servido da borda, grátis
+Frontend estático  ──►  Cloudflare Workers Assets   (hospedagem grátis)
+        └─ /api/*   ──►  Worker (Hono) ──► D1 (metadados)   [Worker só p/ dados/upload]
+Imagens            ──►  Cloudinary (CDN + f_auto/q_auto + resize on-the-fly)
+                        [servidas pelo CDN do Cloudinary — não tocam seu Worker]
 ```
+- Upload: navegador comprime → Worker envia ao Cloudinary (assinado) → guarda o public_id no D1.
+- Servir: `imgUrl(id)` monta a URL do Cloudinary com `f_auto,q_auto,w_X`. Simples.
+- Escala: 1 conta Cloudinary por site/grupo.
 
-- **Upload:** navegador comprime + gera `thumb`/`full` → Worker assina e faz `PUT` no B2 →
-  guarda as keys no D1.
-- **Servir:** `/api/img/:key` no Worker faz `GET` no B2, cacheia com `caches.default` e
-  responde com cache imutável. (Com domínio próprio, troca-se por CNAME + Cache Rule e
-  dispensa-se o Worker.)
+## Padrão B (só p/ storage-heavy) — B2 + cache da Cloudflare
+
+```
+Frontend estático  ──►  Cloudflare Workers Assets
+        ├─ /api/*        ──►  Worker (Hono) ──► D1 (metadados)
+        │                                    └► B2 (PUT/DELETE via S3 assinado)
+        └─ /api/img/:key ──►  Worker ──► Cache API ──► (miss) B2
+                                             └► hit: servido da borda, grátis
+```
+- Upload: navegador gera `thumb`/`full` → Worker faz `PUT` no B2 → guarda a base no D1.
+- Servir: `/api/img/:key` no Worker faz `GET` no B2, cacheia (`caches.default`, imutável).
+  Com domínio próprio, troca-se por CNAME + Cache Rule e dispensa-se o Worker.
+- Trade-off: perde `f_auto`/resize on-the-fly, gasta 1 request de Worker por view, mais código.
+- **Implementação de referência:** branch `feat/b2-images` deste repositório.
 
 ## Táticas extras (baixo esforço, bom retorno)
 
@@ -112,14 +144,15 @@ Frontend (React/Vite) estático  ──►  Cloudflare Workers Assets  (hospedag
 
 - [ ] Frontend estático na Cloudflare (Pages ou Workers Assets)
 - [ ] Worker só para API/auth/upload (nada de renderizar página nem servir imagem à toa)
-- [ ] Arquivos no B2, servidos com cache da Cloudflare (CNAME+Cache Rule, ou proxy+Cache API)
-- [ ] Variantes de imagem geradas no upload; nada de transformar on-the-fly por view
-- [ ] `Cache-Control: immutable, max-age=1 ano` nas imagens (keys únicas)
-- [ ] `loading="lazy"` + tamanhos adequados
-- [ ] Cloudinary só se precisar mesmo transformar dinamicamente
+- [ ] Imagens no **Cloudinary** (conta própria do site) — padrão A; **B2** só se for storage-heavy
+- [ ] `f_auto,q_auto` + tamanho certo por contexto (não mande 3000px p/ exibir em 300px)
+- [ ] `loading="lazy"` nas imagens abaixo da dobra
+- [ ] Comprima no cliente antes de subir (economiza storage)
+- [ ] Nova conta grátis por site quando o free tier de uma apertar
 
 ---
 
-**Status neste projeto (capela):** hospedagem na Cloudflare ✅, dados no D1 ✅. As fotos
-estão migrando de **Cloudinary → Backblaze B2 + cache da Cloudflare** para servir de template
-deste padrão (ver branch `feat/b2-images`).
+**Status neste projeto (capela):** hospedagem na Cloudflare ✅, dados no D1 ✅, fotos no
+**Cloudinary** ✅ (Padrão A — é um site só, de baixo tráfego; o Cloudinary faz o trabalho
+melhor e com menos código). A variante **B2 + Cloudflare** (Padrão B) fica pronta e guardada
+na branch `feat/b2-images` como template para um eventual site **storage-heavy**.
