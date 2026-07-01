@@ -1,0 +1,38 @@
+# ═══════════════════════════════════════════════════════════════════
+#  NGROK — Túnel público para o Frontend  (OPCIONAL)
+#
+#  Use este arquivo SOMENTE se quiser expor o sistema publicamente.
+#  Para rodar apenas localhost, este arquivo NÃO é necessário.
+#
+#  Pré-requisito: adicione NGROK_AUTHTOKEN no .env da raiz do projeto
+#  Obtenha o token em: https://dashboard.ngrok.com/get-started/your-authtoken
+#
+#  Subir com:
+#    docker compose -f docker-compose.ngrok.yml up -d
+#
+#  Consultar URL pública (PowerShell):
+#    (Invoke-RestMethod http://localhost:4040/api/tunnels).tunnels[0].public_url
+#
+#  Consultar URL pública (bash):
+#    curl -s http://localhost:4040/api/tunnels | grep -o '"public_url":"[^"]*"'
+# ═══════════════════════════════════════════════════════════════════
+
+services:
+  # ─────────────────────────────────────────────
+  #  NGROK — Túnel público para o Frontend
+  # ─────────────────────────────────────────────
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: site-capela_ngrok
+    restart: unless-stopped
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN}
+    command: http host.docker.internal:5173
+    ports:
+      - "4040:4040"   # Dashboard de inspeção do ngrok (http://localhost:4040)
+    networks:
+      - site-capela-network
+
+networks:
+  site-capela-network:
+      external: true

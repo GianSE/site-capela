@@ -1,0 +1,107 @@
+.uploadSection {
+  margin-top: var(--space-6);
+}
+.uploadSection h2 {
+  font-size: var(--fs-xl);
+  margin-bottom: var(--space-4);
+}
+.uploadSection h2 span {
+  color: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+}
+
+.uploadZone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-7);
+  text-align: center;
+  color: var(--text-faint);
+  background: var(--surface);
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--dur-fast), color var(--dur-fast);
+}
+.uploadZone:hover:not(:disabled) {
+  border-color: var(--gold-500);
+  color: var(--accent-strong);
+}
+.uploadZone strong {
+  font-size: var(--fs-lg);
+  color: var(--blue-900);
+}
+.uploadZone span {
+  font-size: var(--fs-sm);
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.photoCard {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  background: var(--sand);
+}
+.photoCard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.coverBadge {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--blue-900);
+  background: var(--gold-400);
+  border-radius: var(--radius-full);
+}
+
+.photoActions {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--dur-fast);
+}
+.photoCard:hover .photoActions {
+  opacity: 1;
+}
+.photoActions button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  color: var(--blue-900);
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+.photoActions .del {
+  color: #b91c1c;
+}
+
+/* Em telas de toque, sempre mostra as ações */
+@media (hover: none) {
+  .photoActions {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e9c46a"/>
+      <stop offset="1" stop-color="#c79a3a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="#0b1f3a"/>
+  <circle cx="32" cy="32" r="30" fill="none" stroke="url(#g)" stroke-width="2"/>
+  <!-- Estrela mariana -->
+  <path fill="url(#g)" d="M32 14l3.6 11.1h11.7l-9.5 6.9 3.6 11.1-9.4-6.8-9.4 6.8 3.6-11.1-9.5-6.9h11.7z"/>
+  <!-- Cruz -->
+  <rect x="30.5" y="42" width="3" height="10" fill="url(#g)"/>
+  <rect x="27.5" y="45" width="9" height="3" fill="url(#g)"/>
+</svg>

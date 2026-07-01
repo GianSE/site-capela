@@ -1,0 +1,27 @@
+.hero {
+  background: var(--gradient-blue);
+  color: var(--ivory);
+  padding-block: clamp(var(--space-7), 7vw, var(--space-8));
+  text-align: center;
+}
+
+.eyebrow {
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+  margin-bottom: var(--space-2);
+}
+
+.title {
+  color: var(--ivory);
+  font-size: var(--fs-3xl);
+}
+
+.subtitle {
+  font-size: var(--fs-lg);
+  color: var(--text-on-blue-soft);
+  max-width: 60ch;
+  margin: var(--space-3) auto 0;
+}

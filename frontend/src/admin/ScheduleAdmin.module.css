@@ -1,0 +1,12 @@
+.addForm {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr auto;
+  gap: var(--space-4);
+  align-items: end;
+}
+
+@media (max-width: 760px) {
+  .addForm {
+    grid-template-columns: 1fr;
+  }
+}

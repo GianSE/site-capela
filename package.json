@@ -1,0 +1,22 @@
+{
+  "name": "capela-fatima",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Site da Capela Nossa Senhora de Fátima — frontend (React) + backend (Worker)",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "npm run dev -w frontend",
+    "dev:backend": "npm run dev -w backend",
+    "build": "npm run build -w frontend",
+    "deploy": "npm run build -w frontend && wrangler deploy -c backend/wrangler.toml",
+    "migrate:local": "wrangler d1 migrations apply capela-db --local -c backend/wrangler.toml",
+    "migrate:remote": "wrangler d1 migrations apply capela-db --remote -c backend/wrangler.toml",
+    "create-admin": "node backend/scripts/create-admin.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.95.0"
+  }
+}
