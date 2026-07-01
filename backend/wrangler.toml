@@ -16,7 +16,7 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "capela-db"
-database_id = "PLACEHOLDER_DATABASE_ID"
+database_id = "7f52890c-47ba-4ab6-b948-3afc420c1e1d"
 migrations_dir = "migrations"
 
 # Segredos (defina com `wrangler secret put NOME`):
