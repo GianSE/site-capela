@@ -19,14 +19,12 @@ database_name = "capela-db"
 database_id = "PLACEHOLDER_DATABASE_ID"
 migrations_dir = "migrations"
 
-# Bucket R2 para as fotos. Crie com:
-#   wrangler r2 bucket create capela-fotos
-[[r2_buckets]]
-binding = "FOTOS"
-bucket_name = "capela-fotos"
-
 # Segredos (defina com `wrangler secret put NOME`):
-#   JWT_SECRET  → chave para assinar tokens de sessão do admin
+#   JWT_SECRET             → chave para assinar tokens de sessão do admin
+#   CLOUDINARY_API_SECRET  → segredo do Cloudinary (não versionar!)
 [vars]
-# Variáveis públicas (não sensíveis) podem ficar aqui.
 APP_ENV = "production"
+# Cloudinary (armazenamento de fotos, grátis, sem cartão).
+# cloud_name e api_key não são sensíveis; preencha com os seus:
+CLOUDINARY_CLOUD_NAME = "SEU_CLOUD_NAME"
+CLOUDINARY_API_KEY = "SUA_API_KEY"

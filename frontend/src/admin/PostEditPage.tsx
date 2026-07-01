@@ -33,7 +33,7 @@ export function PostEditPage({ type }: { type: PostType }) {
       setBody(p.body ?? '');
       setLocation(p.location ?? '');
       setEventDate(p.event_date ? p.event_date.slice(0, 10) : '');
-      setCoverKey(p.cover_key);
+      setCoverKey(p.cover_id);
       setPublished(!!p.published);
     });
   }, [id, isNew]);
@@ -49,7 +49,7 @@ export function PostEditPage({ type }: { type: PostType }) {
       body: body || null,
       location: location || null,
       event_date: eventDate || null,
-      cover_key: coverKey,
+      cover_id: coverKey,
       published,
     };
     try {

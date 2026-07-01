@@ -23,8 +23,8 @@ export function ImageUploadField({ value, onChange, label = 'Imagem de capa' }: 
       const compressed = await compressImage(file);
       const form = new FormData();
       form.append('file', compressed);
-      const { key } = await api.post<{ key: string }>('/admin/upload', form);
-      onChange(key);
+      const { cover_id } = await api.post<{ cover_id: string }>('/admin/upload', form);
+      onChange(cover_id);
     } catch (err) {
       alert('Erro ao enviar imagem: ' + (err as Error).message);
     } finally {

@@ -11,7 +11,7 @@ export interface Post {
   body: string | null;
   location: string | null;
   event_date: string | null; // ISO date
-  cover_key: string | null;
+  cover_id: string | null; // public_id no Cloudinary
   published: number; // 0 | 1
   created_at: string;
   updated_at: string;
@@ -20,7 +20,7 @@ export interface Post {
 export interface Photo {
   id: number;
   album_id: number;
-  r2_key: string;
+  image_id: string; // public_id no Cloudinary
   caption: string | null;
   width: number | null;
   height: number | null;
@@ -34,7 +34,7 @@ export interface Album {
   description: string | null;
   event_date: string | null;
   cover_photo_id: number | null;
-  cover_key: string | null; // resolvido pela API (join)
+  cover_id: string | null; // public_id da capa (resolvido pela API via join)
   photo_count: number; // resolvido pela API
   published: number;
   created_at: string;

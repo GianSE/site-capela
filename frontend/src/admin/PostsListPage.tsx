@@ -43,8 +43,8 @@ export function PostsListPage({ type }: { type: PostType }) {
         <div className={ui.list}>
           {posts.map((p) => (
             <div key={p.id} className={ui.item}>
-              {p.cover_key ? (
-                <img src={imgUrl(p.cover_key)} alt="" className={ui.itemThumb} />
+              {p.cover_id ? (
+                <img src={imgUrl(p.cover_id)} alt="" className={ui.itemThumb} />
               ) : (
                 <div className={ui.itemThumb} />
               )}

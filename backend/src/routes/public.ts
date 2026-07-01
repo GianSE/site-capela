@@ -30,7 +30,7 @@ publicRoutes.get('/posts', async (c) => {
   const limit = Math.min(Number(c.req.query('limit')) || 100, 100);
 
   let sql = `SELECT id, slug, type, title, summary, body, location, event_date,
-                    cover_key, published, created_at, updated_at
+                    cover_id, published, created_at, updated_at
                FROM posts WHERE published = 1`;
   const params: unknown[] = [];
   if (type === 'evento' || type === 'aviso') {
@@ -51,7 +51,7 @@ publicRoutes.get('/posts/:slug', async (c) => {
   const slug = c.req.param('slug');
   const post = await c.env.DB.prepare(
     `SELECT id, slug, type, title, summary, body, location, event_date,
-            cover_key, published, created_at, updated_at
+            cover_id, published, created_at, updated_at
        FROM posts WHERE slug = ? AND published = 1`
   )
     .bind(slug)
@@ -66,7 +66,7 @@ publicRoutes.get('/albums', async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT a.id, a.slug, a.title, a.description, a.event_date, a.cover_photo_id,
             a.published, a.created_at,
-            cp.r2_key AS cover_key,
+            cp.image_id AS cover_id,
             (SELECT COUNT(*) FROM photos p WHERE p.album_id = a.id) AS photo_count
        FROM albums a
        LEFT JOIN photos cp ON cp.id = a.cover_photo_id
@@ -84,7 +84,7 @@ publicRoutes.get('/albums/:slug', async (c) => {
   const album = await c.env.DB.prepare(
     `SELECT a.id, a.slug, a.title, a.description, a.event_date, a.cover_photo_id,
             a.published, a.created_at,
-            cp.r2_key AS cover_key,
+            cp.image_id AS cover_id,
             (SELECT COUNT(*) FROM photos p WHERE p.album_id = a.id) AS photo_count
        FROM albums a
        LEFT JOIN photos cp ON cp.id = a.cover_photo_id
@@ -95,7 +95,7 @@ publicRoutes.get('/albums/:slug', async (c) => {
   if (!album) return c.json({ error: 'Álbum não encontrado' }, 404);
 
   const { results: photos } = await c.env.DB.prepare(
-    `SELECT id, album_id, r2_key, caption, width, height, sort_order
+    `SELECT id, album_id, image_id, caption, width, height, sort_order
        FROM photos WHERE album_id = ? ORDER BY sort_order, id`
   )
     .bind(album.id)
@@ -104,16 +104,4 @@ publicRoutes.get('/albums/:slug', async (c) => {
   return c.json({ ...album, photos });
 });
 
-// ---------- Imagem do R2 ----------
-publicRoutes.get('/img/:key{.+}', async (c) => {
-  const key = c.req.param('key');
-  const object = await c.env.FOTOS.get(key);
-  if (!object) return c.json({ error: 'Imagem não encontrada' }, 404);
-
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
-  headers.set('etag', object.httpEtag);
-  // Cache longo: as chaves são únicas por upload (imutáveis).
-  headers.set('Cache-Control', 'public, max-age=31536000, immutable');
-  return new Response(object.body, { headers });
-});
+// As imagens são servidas diretamente pela CDN do Cloudinary (ver frontend imgUrl).

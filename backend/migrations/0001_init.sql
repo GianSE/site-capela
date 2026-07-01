@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS posts (
   body       TEXT,
   location   TEXT,
   event_date TEXT,
-  cover_key  TEXT,
+  cover_id   TEXT,
   published  INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
@@ -41,11 +41,11 @@ CREATE TABLE IF NOT EXISTS albums (
   created_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Fotos dos álbuns (arquivo no R2, metadados aqui)
+-- Fotos dos álbuns (arquivo no Cloudinary, metadados aqui)
 CREATE TABLE IF NOT EXISTS photos (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   album_id   INTEGER NOT NULL REFERENCES albums (id) ON DELETE CASCADE,
-  r2_key     TEXT NOT NULL,
+  image_id   TEXT NOT NULL,
   caption    TEXT,
   width      INTEGER,
   height     INTEGER,

@@ -41,8 +41,8 @@ export default function AlbumsListPage() {
         <div className={ui.list}>
           {albums.map((a) => (
             <div key={a.id} className={ui.item}>
-              {a.cover_key ? (
-                <img src={imgUrl(a.cover_key)} alt="" className={ui.itemThumb} />
+              {a.cover_id ? (
+                <img src={imgUrl(a.cover_id)} alt="" className={ui.itemThumb} />
               ) : (
                 <div className={ui.itemThumb} />
               )}

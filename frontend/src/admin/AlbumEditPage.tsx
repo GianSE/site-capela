@@ -185,7 +185,7 @@ export default function AlbumEditPage() {
           <div className={styles.photoGrid}>
             {photos.map((photo) => (
               <div key={photo.id} className={styles.photoCard}>
-                <img src={imgUrl(photo.r2_key)} alt={photo.caption ?? ''} loading="lazy" />
+                <img src={imgUrl(photo.image_id)} alt={photo.caption ?? ''} loading="lazy" />
                 {coverPhotoId === photo.id && (
                   <span className={styles.coverBadge}>
                     <Icon name="star" size={12} /> Capa

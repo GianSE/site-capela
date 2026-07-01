@@ -38,9 +38,9 @@ export default function PostDetailPage() {
   return (
     <article>
       <header className={styles.hero}>
-        {post.cover_key && (
+        {post.cover_id && (
           <div className={styles.heroImage}>
-            <img src={imgUrl(post.cover_key)} alt={post.title} />
+            <img src={imgUrl(post.cover_id)} alt={post.title} />
             <div className={styles.heroOverlay} />
           </div>
         )}

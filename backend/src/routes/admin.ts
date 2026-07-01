@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import type { Env, Variables } from '../types';
 import { requireAuth } from '../middleware/auth';
 import { uniqueSlug } from '../lib/slug';
+import { uploadImage, deleteImage } from '../lib/cloudinary';
 
 export const adminRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -9,7 +10,7 @@ export const adminRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 adminRoutes.use('*', requireAuth);
 
 // ============================================================
-// UPLOAD avulso (capa de evento/aviso) → R2, devolve a chave
+// UPLOAD avulso (capa de evento/aviso) → Cloudinary, devolve o public_id
 // ============================================================
 adminRoutes.post('/upload', async (c) => {
   const form = await c.req.formData();
@@ -17,12 +18,8 @@ adminRoutes.post('/upload', async (c) => {
   if (!raw || typeof raw === 'string') {
     return c.json({ error: 'Nenhum arquivo enviado' }, 400);
   }
-  const ext = extFromType(raw.type);
-  const key = `covers/${crypto.randomUUID()}.${ext}`;
-  await c.env.FOTOS.put(key, raw.stream(), {
-    httpMetadata: { contentType: raw.type || 'image/jpeg' },
-  });
-  return c.json({ key }, 201);
+  const { publicId } = await uploadImage(c.env, raw, 'capela/covers');
+  return c.json({ cover_id: publicId }, 201);
 });
 
 // ============================================================
@@ -50,7 +47,7 @@ interface PostInput {
   body?: string;
   location?: string;
   event_date?: string;
-  cover_key?: string;
+  cover_id?: string;
   published?: boolean;
 }
 
@@ -65,7 +62,7 @@ adminRoutes.post('/posts', async (c) => {
   });
 
   const res = await c.env.DB.prepare(
-    `INSERT INTO posts (slug, type, title, summary, body, location, event_date, cover_key, published)
+    `INSERT INTO posts (slug, type, title, summary, body, location, event_date, cover_id, published)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
     .bind(
@@ -76,7 +73,7 @@ adminRoutes.post('/posts', async (c) => {
       b.body ?? null,
       b.location ?? null,
       b.event_date || null,
-      b.cover_key ?? null,
+      b.cover_id ?? null,
       b.published ? 1 : 0
     )
     .run();
@@ -97,7 +94,7 @@ adminRoutes.put('/posts/:id', async (c) => {
        body = ?,
        location = ?,
        event_date = ?,
-       cover_key = ?,
+       cover_id = ?,
        published = COALESCE(?, published),
        updated_at = datetime('now')
      WHERE id = ?`
@@ -108,7 +105,7 @@ adminRoutes.put('/posts/:id', async (c) => {
       b.body ?? null,
       b.location ?? null,
       b.event_date || null,
-      b.cover_key ?? null,
+      b.cover_id ?? null,
       b.published === undefined ? null : b.published ? 1 : 0,
       id
     )
@@ -127,7 +124,7 @@ adminRoutes.delete('/posts/:id', async (c) => {
 // ============================================================
 adminRoutes.get('/albums', async (c) => {
   const { results } = await c.env.DB.prepare(
-    `SELECT a.*, cp.r2_key AS cover_key,
+    `SELECT a.*, cp.image_id AS cover_id,
             (SELECT COUNT(*) FROM photos p WHERE p.album_id = a.id) AS photo_count
        FROM albums a
        LEFT JOIN photos cp ON cp.id = a.cover_photo_id
@@ -198,13 +195,13 @@ adminRoutes.put('/albums/:id', async (c) => {
 
 adminRoutes.delete('/albums/:id', async (c) => {
   const id = c.req.param('id');
-  // Remove os arquivos do R2 antes de apagar as linhas.
+  // Remove as imagens do Cloudinary antes de apagar as linhas.
   const { results } = await c.env.DB.prepare(
-    `SELECT r2_key FROM photos WHERE album_id = ?`
+    `SELECT image_id FROM photos WHERE album_id = ?`
   )
     .bind(id)
-    .all<{ r2_key: string }>();
-  await Promise.all(results.map((p) => c.env.FOTOS.delete(p.r2_key)));
+    .all<{ image_id: string }>();
+  await Promise.all(results.map((p) => deleteImage(c.env, p.image_id)));
   await c.env.DB.prepare(`DELETE FROM albums WHERE id = ?`).bind(id).run();
   return c.body(null, 204);
 });
@@ -234,17 +231,18 @@ adminRoutes.post('/albums/:id/photos', async (c) => {
 
   const created: unknown[] = [];
   for (const file of files) {
-    const ext = extFromType(file.type);
-    const key = `albums/${albumId}/${crypto.randomUUID()}.${ext}`;
-    await c.env.FOTOS.put(key, file.stream(), {
-      httpMetadata: { contentType: file.type || 'image/jpeg' },
-    });
+    const { publicId, width, height } = await uploadImage(
+      c.env,
+      file,
+      `capela/albums/${albumId}`
+    );
     const res = await c.env.DB.prepare(
-      `INSERT INTO photos (album_id, r2_key, sort_order) VALUES (?, ?, ?)`
+      `INSERT INTO photos (album_id, image_id, width, height, sort_order)
+       VALUES (?, ?, ?, ?, ?)`
     )
-      .bind(albumId, key, order++)
+      .bind(albumId, publicId, width, height, order++)
       .run();
-    created.push({ id: res.meta.last_row_id, r2_key: key });
+    created.push({ id: res.meta.last_row_id, image_id: publicId });
   }
 
   // Se o álbum ainda não tem capa, usa a primeira foto enviada.
@@ -270,10 +268,10 @@ adminRoutes.put('/photos/:id', async (c) => {
 
 adminRoutes.delete('/photos/:id', async (c) => {
   const id = c.req.param('id');
-  const photo = await c.env.DB.prepare(`SELECT r2_key FROM photos WHERE id = ?`)
+  const photo = await c.env.DB.prepare(`SELECT image_id FROM photos WHERE id = ?`)
     .bind(id)
-    .first<{ r2_key: string }>();
-  if (photo) await c.env.FOTOS.delete(photo.r2_key);
+    .first<{ image_id: string }>();
+  if (photo) await deleteImage(c.env, photo.image_id);
   await c.env.DB.prepare(`DELETE FROM photos WHERE id = ?`).bind(id).run();
   return c.body(null, 204);
 });
@@ -366,19 +364,3 @@ adminRoutes.put('/settings', async (c) => {
   }
   return c.json({ ok: true });
 });
-
-// ---------- util ----------
-function extFromType(type: string): string {
-  switch (type) {
-    case 'image/png':
-      return 'png';
-    case 'image/webp':
-      return 'webp';
-    case 'image/gif':
-      return 'gif';
-    case 'image/avif':
-      return 'avif';
-    default:
-      return 'jpg';
-  }
-}

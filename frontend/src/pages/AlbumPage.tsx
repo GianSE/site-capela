@@ -86,7 +86,7 @@ export default function AlbumPage() {
                 aria-label={`Abrir foto ${i + 1}`}
               >
                 <img
-                  src={imgUrl(photo.r2_key)}
+                  src={imgUrl(photo.image_id)}
                   alt={photo.caption ?? `Foto ${i + 1}`}
                   loading="lazy"
                 />
@@ -129,7 +129,7 @@ export default function AlbumPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={imgUrl(photos[lightbox].r2_key)}
+                src={imgUrl(photos[lightbox].image_id)}
                 alt={photos[lightbox].caption ?? `Foto ${lightbox + 1}`}
               />
               {photos[lightbox].caption && (

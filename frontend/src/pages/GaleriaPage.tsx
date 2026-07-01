@@ -42,8 +42,8 @@ export default function GaleriaPage() {
             {albuns.map((a) => (
               <Link key={a.id} to={`/galeria/${a.slug}`} className={styles.card}>
                 <div className={styles.imageWrap}>
-                  {a.cover_key ? (
-                    <img src={imgUrl(a.cover_key)} alt={a.title} loading="lazy" />
+                  {a.cover_id ? (
+                    <img src={imgUrl(a.cover_id)} alt={a.title} loading="lazy" />
                   ) : (
                     <div className={styles.placeholder}>
                       <Icon name="image" size={32} />

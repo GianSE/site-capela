@@ -1,7 +1,8 @@
-# Deploy — Capela N. S. de Fátima (Cloudflare, grátis)
+# Deploy — Capela N. S. de Fátima (grátis, sem cartão)
 
-Tudo roda no plano gratuito do Cloudflare: **Workers** (site + API), **D1** (banco)
-e **R2** (fotos). Para ~100 visitantes, fica folgado dentro dos limites grátis.
+Hospedagem no **Cloudflare** (Workers + D1) e fotos no **Cloudinary**.
+Tudo no plano gratuito — e **sem precisar de cartão de crédito**.
+Para ~100 visitantes, fica folgado dentro dos limites grátis.
 
 O projeto é um **monorepo npm workspaces** (`frontend` + `backend`). Todos os comandos
 abaixo rodam a partir da **raiz** (`site-capela/`).
@@ -27,13 +28,13 @@ npx wrangler d1 create capela-db
 Copie o `database_id` retornado e cole em **`backend/wrangler.toml`**, no lugar de
 `PLACEHOLDER_DATABASE_ID`.
 
-### 3. Criar o bucket R2 (fotos)
+### 3. Configurar o Cloudinary (fotos)
 
-```bash
-npx wrangler r2 bucket create capela-fotos
-```
-
-> R2 exige ativar o serviço uma vez no painel (Dashboard → R2). É gratuito até 10 GB.
+1. Crie uma conta grátis em <https://cloudinary.com> (não pede cartão).
+2. No **Dashboard**, copie: **Cloud name**, **API Key** e **API Secret**.
+3. Em **`backend/wrangler.toml`**, preencha `CLOUDINARY_CLOUD_NAME` e `CLOUDINARY_API_KEY`.
+4. Em **`frontend/src/data/site.ts`**, preencha `CLOUDINARY_CLOUD` com o mesmo Cloud name.
+5. Guarde o **API Secret** para o passo 5 (é sensível, não vai no código).
 
 ### 4. Aplicar as migrações no banco remoto
 
@@ -43,11 +44,14 @@ npm run migrate:remote
 
 Cria as tabelas e o seed inicial (programação e contatos).
 
-### 5. Definir o segredo da sessão
+### 5. Definir os segredos
 
 ```bash
 npx wrangler secret put JWT_SECRET -c backend/wrangler.toml
 # cole uma frase longa e aleatória quando solicitado
+
+npx wrangler secret put CLOUDINARY_API_SECRET -c backend/wrangler.toml
+# cole o API Secret do Cloudinary
 ```
 
 ### 6. Criar o primeiro administrador
@@ -76,8 +80,8 @@ Igual ao portfólio: conecte o repositório e o Cloudflare faz build + deploy a 
 Pronto. A partir daí, todo `git push` na branch principal dispara build + deploy
 automático. O site fica em `https://capela-fatima.<sua-conta>.workers.dev`.
 
-> Os segredos (`JWT_SECRET`) e o `database_id` já ficam no Worker/arquivo — o CI não
-> precisa deles além do que já está configurado.
+> Os segredos (`JWT_SECRET`, `CLOUDINARY_API_SECRET`) e o `database_id` já ficam no
+> Worker/arquivo — o CI não precisa deles além do que já está configurado.
 
 ### Deploy manual (alternativa, sem Git)
 
@@ -116,5 +120,6 @@ Painel Cloudflare → seu Worker → **Settings → Domains & Routes** → adici
 |---|---|---|
 | Workers (requests) | 100.000/dia | Folgado |
 | D1 (leituras) | 5 milhões/dia | Folgado |
-| R2 (armazenamento) | 10 GB | Centenas de fotos |
-| R2 (egress) | **ilimitado** | — |
+| Cloudinary | 25 créditos/mês (≈ 25 GB de fotos) | Milhares de fotos |
+
+Nenhum deles pede cartão de crédito.

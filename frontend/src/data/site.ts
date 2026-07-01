@@ -20,6 +20,12 @@ export const CAPELA = {
   mapsQuery: 'Av. Gralha Azul, 25 - Jardim Nova Esperança',
 } as const;
 
+/**
+ * Nome da sua conta Cloudinary (cloud name) — não é segredo.
+ * Pegue no painel do Cloudinary (Dashboard → "Cloud name") e preencha aqui.
+ */
+export const CLOUDINARY_CLOUD = 'SEU_CLOUD_NAME';
+
 export const NAV_LINKS = [
   { label: 'Início', to: '/' },
   { label: 'Pastorais', to: '/pastorais' },

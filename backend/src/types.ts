@@ -4,10 +4,12 @@
  */
 export interface Env {
   DB: D1Database;
-  FOTOS: R2Bucket;
   ASSETS: Fetcher;
   JWT_SECRET: string;
   APP_ENV: string;
+  CLOUDINARY_CLOUD_NAME: string;
+  CLOUDINARY_API_KEY: string;
+  CLOUDINARY_API_SECRET: string;
 }
 
 /** Payload do token de sessão do admin. */

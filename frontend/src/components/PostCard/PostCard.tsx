@@ -12,8 +12,8 @@ export function PostCard({ post }: { post: Post }) {
   return (
     <Link to={`${base}/${post.slug}`} className={styles.card}>
       <div className={styles.imageWrap}>
-        {post.cover_key ? (
-          <img src={imgUrl(post.cover_key)} alt={post.title} loading="lazy" />
+        {post.cover_id ? (
+          <img src={imgUrl(post.cover_id)} alt={post.title} loading="lazy" />
         ) : (
           <div className={styles.placeholder}>
             <Icon name={post.type === 'evento' ? 'calendar' : 'broadcast'} size={32} />

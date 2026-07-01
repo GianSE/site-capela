@@ -156,9 +156,9 @@ export default function HomePage() {
           <div className={styles.eventsGrid}>
             {proximosEventos.map((ev) => (
               <Link key={ev.id} to={`/eventos/${ev.slug}`} className={styles.eventCard}>
-                {ev.cover_key && (
+                {ev.cover_id && (
                   <div className={styles.eventImage}>
-                    <img src={imgUrl(ev.cover_key)} alt={ev.title} loading="lazy" />
+                    <img src={imgUrl(ev.cover_id)} alt={ev.title} loading="lazy" />
                   </div>
                 )}
                 <div className={styles.eventBody}>
@@ -189,8 +189,8 @@ export default function HomePage() {
             <div className={styles.galleryGrid}>
               {albuns.slice(0, 3).map((a) => (
                 <Link key={a.id} to={`/galeria/${a.slug}`} className={styles.galleryCard}>
-                  {a.cover_key ? (
-                    <img src={imgUrl(a.cover_key)} alt={a.title} loading="lazy" />
+                  {a.cover_id ? (
+                    <img src={imgUrl(a.cover_id)} alt={a.title} loading="lazy" />
                   ) : (
                     <div className={styles.galleryPlaceholder}>
                       <Icon name="image" size={32} />
