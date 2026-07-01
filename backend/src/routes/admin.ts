@@ -3,6 +3,7 @@ import type { Env, Variables } from '../types';
 import { requireAuth } from '../middleware/auth';
 import { uniqueSlug } from '../lib/slug';
 import { uploadImage, deleteImage } from '../lib/cloudinary';
+import { hashPassword } from '../lib/crypto';
 
 export const adminRoutes = new Hono<{ Bindings: Env; Variables: Variables }>();
 
@@ -394,4 +395,69 @@ adminRoutes.put('/settings', async (c) => {
     await c.env.DB.batch(entries.map(([k, v]) => stmt.bind(k, String(v))));
   }
   return c.json({ ok: true });
+});
+
+// ============================================================
+// ADMIN USERS — gerenciamento de contas do painel
+// ============================================================
+adminRoutes.get('/users', async (c) => {
+  const { results } = await c.env.DB.prepare(
+    `SELECT id, email, name, created_at FROM admin_users ORDER BY created_at`
+  ).all();
+  return c.json(results);
+});
+
+interface UserInput {
+  email?: string;
+  name?: string;
+  password?: string;
+}
+
+adminRoutes.post('/users', async (c) => {
+  const b = await c.req.json<UserInput>().catch(() => ({}) as UserInput);
+  const email = (b.email ?? '').trim().toLowerCase();
+  const name = (b.name ?? '').trim();
+  const password = b.password ?? '';
+
+  if (!email || !name || !password) {
+    return c.json({ error: 'E-mail, nome e senha são obrigatórios' }, 400);
+  }
+  if (password.length < 8) {
+    return c.json({ error: 'A senha deve ter pelo menos 8 caracteres' }, 400);
+  }
+
+  const existing = await c.env.DB.prepare(`SELECT 1 FROM admin_users WHERE email = ?`)
+    .bind(email)
+    .first();
+  if (existing) return c.json({ error: 'Já existe uma conta com este e-mail' }, 409);
+
+  const password_hash = await hashPassword(password);
+  const res = await c.env.DB.prepare(
+    `INSERT INTO admin_users (email, name, password_hash) VALUES (?, ?, ?)`
+  )
+    .bind(email, name, password_hash)
+    .run();
+
+  return c.json({ id: res.meta.last_row_id, email, name }, 201);
+});
+
+adminRoutes.delete('/users/:id', async (c) => {
+  const id = c.req.param('id');
+  const user = c.get('user');
+
+  // Impede que o admin logado apague a própria conta (evitaria ficar sem acesso).
+  if (Number(id) === user.sub) {
+    return c.json({ error: 'Você não pode excluir sua própria conta' }, 400);
+  }
+
+  // Nunca deixa o painel sem nenhum administrador.
+  const { results } = await c.env.DB.prepare(`SELECT COUNT(*) AS n FROM admin_users`).all<{
+    n: number;
+  }>();
+  if ((results[0]?.n ?? 0) <= 1) {
+    return c.json({ error: 'Deve existir ao menos um administrador' }, 400);
+  }
+
+  await c.env.DB.prepare(`DELETE FROM admin_users WHERE id = ?`).bind(id).run();
+  return c.body(null, 204);
 });

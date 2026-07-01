@@ -25,6 +25,7 @@ const AlbumsListPage = lazy(() => import('./admin/AlbumsListPage'));
 const AlbumEditPage = lazy(() => import('./admin/AlbumEditPage'));
 const ScheduleAdmin = lazy(() => import('./admin/ScheduleAdmin'));
 const SettingsAdmin = lazy(() => import('./admin/SettingsAdmin'));
+const UsersAdmin = lazy(() => import('./admin/UsersAdmin'));
 
 function page(el: React.ReactNode) {
   return <Suspense fallback={<Loader />}>{el}</Suspense>;
@@ -74,6 +75,7 @@ export const router = createBrowserRouter([
       { path: 'galeria/:id', element: page(<AlbumEditPage />) },
       { path: 'programacao', element: page(<ScheduleAdmin />) },
       { path: 'configuracoes', element: page(<SettingsAdmin />) },
+      { path: 'usuarios', element: page(<UsersAdmin />) },
     ],
   },
 ]);

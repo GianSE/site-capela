@@ -12,6 +12,7 @@ const LINKS: { to: string; label: string; icon: IconName }[] = [
   { to: '/admin/galeria', label: 'Galeria', icon: 'image' },
   { to: '/admin/programacao', label: 'Programação', icon: 'clock' },
   { to: '/admin/configuracoes', label: 'Configurações', icon: 'mapPin' },
+  { to: '/admin/usuarios', label: 'Usuários', icon: 'users' },
 ];
 
 export function AdminLayout() {

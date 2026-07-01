@@ -23,7 +23,8 @@ export type IconName =
   | 'arrowRight'
   | 'chevronLeft'
   | 'chevronRight'
-  | 'star';
+  | 'star'
+  | 'users';
 
 interface IconProps extends SVGProps<SVGSVGElement> {
   name: IconName;
@@ -124,6 +125,14 @@ const paths: Record<IconName, JSX.Element> = {
   chevronLeft: <path d="M15 6l-6 6 6 6" />,
   chevronRight: <path d="M9 6l6 6-6 6" />,
   star: <path d="M12 3l2.4 7.4H22l-6 4.4 2.3 7.2L12 17.6 5.7 22 8 14.8l-6-4.4h7.6z" />,
+  users: (
+    <>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6" />
+      <circle cx="17" cy="9" r="2.4" />
+      <path d="M15.5 14.2c2.4.4 4 2.3 4 5.8" />
+    </>
+  ),
 };
 
 export function Icon({ name, size = 24, ...rest }: IconProps) {
