@@ -7,6 +7,7 @@ import type { Pastoral } from '../types';
 import type { IconName } from '../components/Icon/Icon';
 import { Icon } from '../components/Icon/Icon';
 import ui from './admin-ui.module.css';
+import styles from './PastoraisAdmin.module.css';
 
 export default function PastoraisAdmin() {
   useSeo({ title: 'Pastorais' });
@@ -64,53 +65,53 @@ export default function PastoraisAdmin() {
       ) : (
         <div className={ui.list}>
           {pastorais.map((p, i) => (
-            <div key={p.id} className={ui.item}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div key={p.id} className={styles.row}>
+              <div className={styles.reorder}>
                 <button
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
-                  className={ui.btnGhost}
-                  style={{ padding: 4 }}
-                  aria-label="Mover para cima"
+                  className={styles.reorderBtn}
+                  aria-label={`Mover "${p.nome}" para cima`}
                 >
-                  <Icon name="chevronLeft" size={14} style={{ transform: 'rotate(90deg)' }} />
+                  <Icon name="chevronLeft" size={18} style={{ transform: 'rotate(90deg)' }} />
                 </button>
                 <button
                   onClick={() => move(i, 1)}
                   disabled={i === pastorais.length - 1}
-                  className={ui.btnGhost}
-                  style={{ padding: 4 }}
-                  aria-label="Mover para baixo"
+                  className={styles.reorderBtn}
+                  aria-label={`Mover "${p.nome}" para baixo`}
                 >
-                  <Icon name="chevronRight" size={14} style={{ transform: 'rotate(90deg)' }} />
+                  <Icon name="chevronRight" size={18} style={{ transform: 'rotate(90deg)' }} />
                 </button>
               </div>
 
-              {p.cover_id ? (
-                <img src={imgUrl(p.cover_id, 128)} alt="" className={ui.itemThumb} />
-              ) : (
-                <div className={ui.itemThumb} style={{ display: 'grid', placeItems: 'center' }}>
-                  <Icon name={p.icon as IconName} size={22} />
+              <div className={`${ui.item} ${styles.rowItem}`}>
+                {p.cover_id ? (
+                  <img src={imgUrl(p.cover_id, 128)} alt="" className={ui.itemThumb} />
+                ) : (
+                  <div className={ui.itemThumb} style={{ display: 'grid', placeItems: 'center' }}>
+                    <Icon name={p.icon as IconName} size={22} />
+                  </div>
+                )}
+
+                <div className={ui.itemBody}>
+                  <h3>{p.nome}</h3>
+                  <p>
+                    {p.photo_count ?? 0} foto
+                    {(p.photo_count ?? 0) === 1 ? '' : 's'}
+                  </p>
                 </div>
-              )}
-
-              <div className={ui.itemBody}>
-                <h3>{p.nome}</h3>
-                <p>
-                  {p.photo_count ?? 0} foto
-                  {(p.photo_count ?? 0) === 1 ? '' : 's'}
-                </p>
-              </div>
-              <span className={`${ui.badge} ${p.published ? ui.badgePublished : ui.badgeDraft}`}>
-                {p.published ? 'Publicada' : 'Oculta'}
-              </span>
-              <div className={ui.itemActions}>
-                <Link to={`/admin/pastorais/${p.id}`} className={ui.btnGhost}>
-                  Editar
-                </Link>
-                <button onClick={() => handleDelete(p)} className={ui.btnDanger}>
-                  <Icon name="close" size={16} /> Excluir
-                </button>
+                <span className={`${ui.badge} ${p.published ? ui.badgePublished : ui.badgeDraft}`}>
+                  {p.published ? 'Publicada' : 'Oculta'}
+                </span>
+                <div className={ui.itemActions}>
+                  <Link to={`/admin/pastorais/${p.id}`} className={ui.btnGhost}>
+                    Editar
+                  </Link>
+                  <button onClick={() => handleDelete(p)} className={ui.btnDanger}>
+                    <Icon name="close" size={16} /> Excluir
+                  </button>
+                </div>
               </div>
             </div>
           ))}

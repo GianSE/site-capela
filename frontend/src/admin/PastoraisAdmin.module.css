@@ -1,0 +1,35 @@
+.row {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+.rowItem {
+  flex: 1;
+  min-width: 0;
+}
+
+.reorder {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.reorderBtn {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  color: var(--blue-900);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: background var(--dur-fast);
+}
+.reorderBtn:hover:not(:disabled) {
+  background: var(--sand);
+}
+.reorderBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
