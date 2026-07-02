@@ -60,6 +60,7 @@ export interface AdminUser {
   email: string;
   name: string;
   created_at?: string;
+  is_primary?: boolean; // conta principal do projeto — nunca pode ser removida
 }
 
 export interface PastoralPhoto {

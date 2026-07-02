@@ -128,6 +128,11 @@ export default function UsersAdmin() {
               <div className={ui.itemBody}>
                 <h3>
                   {u.name}
+                  {u.is_primary && (
+                    <span className={`${ui.badge} ${ui.badgeDraft}`} style={{ marginLeft: 8 }}>
+                      Principal
+                    </span>
+                  )}
                   {u.id === currentUser?.id && (
                     <span className={`${ui.badge} ${ui.badgePublished}`} style={{ marginLeft: 8 }}>
                       Você
@@ -137,7 +142,7 @@ export default function UsersAdmin() {
                 <p>{u.email}</p>
               </div>
               <div className={ui.itemActions}>
-                {u.id !== currentUser?.id && (
+                {!u.is_primary && u.id !== currentUser?.id && (
                   <button onClick={() => handleDelete(u)} className={ui.btnDanger}>
                     <Icon name="close" size={16} /> Remover acesso
                   </button>

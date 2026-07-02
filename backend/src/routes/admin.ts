@@ -572,11 +572,20 @@ adminRoutes.put('/settings', async (c) => {
 // ============================================================
 // ADMIN USERS — gerenciamento de contas do painel
 // ============================================================
+
+// Conta principal (dono do projeto) — nunca pode ser removida do painel,
+// independentemente de quem estiver logado.
+const PRIMARY_ADMIN_EMAIL = 'gianpedrodev@gmail.com';
+
 adminRoutes.get('/users', async (c) => {
   const { results } = await c.env.DB.prepare(
     `SELECT id, email, name, created_at FROM admin_users ORDER BY created_at`
-  ).all();
-  return c.json(results);
+  ).all<{ email: string }>();
+  const withFlag = results.map((u) => ({
+    ...u,
+    is_primary: u.email.toLowerCase() === PRIMARY_ADMIN_EMAIL,
+  }));
+  return c.json(withFlag);
 });
 
 interface UserInput {
@@ -616,6 +625,16 @@ adminRoutes.post('/users', async (c) => {
 adminRoutes.delete('/users/:id', async (c) => {
   const id = c.req.param('id');
   const user = c.get('user');
+
+  const target = await c.env.DB.prepare(`SELECT email FROM admin_users WHERE id = ?`)
+    .bind(id)
+    .first<{ email: string }>();
+  if (!target) return c.json({ error: 'Não encontrado' }, 404);
+
+  // Conta principal do projeto — nunca pode ser removida, mesmo por outro admin.
+  if (target.email.toLowerCase() === PRIMARY_ADMIN_EMAIL) {
+    return c.json({ error: 'Esta é a conta principal e não pode ser removida' }, 400);
+  }
 
   // Impede que o admin logado apague a própria conta (evitaria ficar sem acesso).
   if (Number(id) === user.sub) {
